@@ -1,0 +1,126 @@
+
+services:
+  zammad-postgresql:
+    image: postgres:16-alpine
+    container_name: zammad-postgresql
+    environment:
+      POSTGRES_USER: zammad
+      POSTGRES_PASSWORD: zammad
+      POSTGRES_DB: zammad
+    volumes:
+      - zammad-postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zammad"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zammad-network
+
+  zammad-redis:
+    image: redis:7-alpine
+    container_name: zammad-redis
+    volumes:
+      - zammad-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zammad-network
+
+  zammad-elasticsearch:
+    image: bitnami/elasticsearch:8.12.0
+    container_name: zammad-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - zammad-elasticsearch-data:/bitnami/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - zammad-network
+
+  zammad-init:
+    image: ghcr.io/zammad/zammad:6.3
+    container_name: zammad-init
+    environment:
+      - MEMCACHE_SERVERS=zammad-redis:6379
+      - POSTGRESQL_HOST=zammad-postgresql
+      - POSTGRESQL_USER=zammad
+      - POSTGRESQL_PASS=zammad
+      - POSTGRESQL_DB=zammad
+      - ELASTICSEARCH_HOST=zammad-elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - REDIS_URL=redis://zammad-redis:6379
+      - AUTO_MIGRATE=true
+    depends_on:
+      zammad-postgresql:
+        condition: service_healthy
+      zammad-redis:
+        condition: service_healthy
+      zammad-elasticsearch:
+        condition: service_healthy
+    volumes:
+      - zammad-data:/opt/zammad
+    command: ["zammad-init"]
+    networks:
+      - zammad-network
+
+  zammad-railsserver:
+    image: ghcr.io/zammad/zammad:6.3
+    container_name: zammad-railsserver
+    environment:
+      - MEMCACHE_SERVERS=zammad-redis:6379
+      - POSTGRESQL_HOST=zammad-postgresql
+      - POSTGRESQL_USER=zammad
+      - POSTGRESQL_PASS=zammad
+      - POSTGRESQL_DB=zammad
+      - ELASTICSEARCH_HOST=zammad-elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - REDIS_URL=redis://zammad-redis:6379
+    depends_on:
+      zammad-init:
+        condition: service_completed_successfully
+    volumes:
+      - zammad-data:/opt/zammad
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - zammad-network
+
+  zammad-nginx:
+    image: nginx:alpine
+    container_name: zammad-nginx
+    ports:
+      - "8080:8080"
+    depends_on:
+      zammad-railsserver:
+        condition: service_healthy
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - zammad-data:/opt/zammad:ro
+    networks:
+      - zammad-network
+
+volumes:
+  zammad-postgresql-data:
+  zammad-redis-data:
+  zammad-elasticsearch-data:
+  zammad-data:
+
+networks:
+  zammad-network:
+    driver: bridge
