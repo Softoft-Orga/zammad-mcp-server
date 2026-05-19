@@ -3,6 +3,7 @@
 A powerful, production-ready Model Context Protocol (MCP) server for [Zammad](https://zammad.com) - the open-source helpdesk and ticket system.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/zammad-mcp-server.svg)](https://pypi.org/project/zammad-mcp-server/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FastMCP](https://img.shields.io/badge/FastMCP-2.0+-green.svg)](https://github.com/jlowin/fastmcp)
 
@@ -25,16 +26,22 @@ The Zammad MCP Server provides AI assistants (like Claude) with structured, type
 
 ### Installation
 
+**From PyPI (recommended for MCP clients):**
+
 ```bash
-# Clone the repository
+pip install zammad-mcp-server
+# or
+uv tool install zammad-mcp-server
+# or run once without installing
+uvx zammad-mcp-server
+```
+
+**From source (development):**
+
+```bash
 git clone https://github.com/Softoft-Orga/zammad-mcp-server.git
 cd zammad-mcp-server
-
-# Install with pip
-pip install -e ".[dev]"
-
-# Or with uv (recommended)
-uv pip install -e ".[dev]"
+uv sync --extra dev
 ```
 
 ### Configuration
@@ -60,23 +67,27 @@ zammad-mcp-server
 zammad-mcp-server --transport sse --port 8000
 ```
 
-### Claude Desktop Configuration
+### Claude Desktop / Cursor
 
-Add to your Claude Desktop configuration (`claude_desktop_config.json`):
+Add to `claude_desktop_config.json` or Cursor **Settings → MCP**:
 
 ```json
 {
   "mcpServers": {
     "zammad": {
-      "command": "zammad-mcp-server",
+      "command": "uvx",
+      "args": ["zammad-mcp-server"],
       "env": {
         "ZAMMAD_URL": "https://your-zammad-instance.com",
-        "ZAMMAD_HTTP_TOKEN": "your_token"
+        "ZAMMAD_HTTP_TOKEN": "your_token",
+        "MCP_DENIED_TOOLS": "delete_ticket,delete_user,delete_organization"
       }
     }
   }
 }
 ```
+
+Restart the app after saving. Ask: *"Run health_check on Zammad"* or *"List open tickets."*
 
 ## Development Environment
 

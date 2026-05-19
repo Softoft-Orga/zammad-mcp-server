@@ -7,12 +7,16 @@ name = "zammad-mcp-server"
 version = "0.1.0"
 description = "A powerful Model Context Protocol (MCP) server for Zammad ticket system"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [
-    { name = "Open Ticket AI", email = "tobias.bueck@openticketai.com" },
+    { name = "Softoft", email = "tobias.bueck@openticketai.com" },
 ]
-keywords = ["mcp", "zammad", "tickets", "ai", "claude", "helpdesk"]
+maintainers = [
+    { name = "Softoft", email = "tobias.bueck@openticketai.com" },
+]
+keywords = ["mcp", "zammad", "tickets", "ai", "claude", "helpdesk", "model-context-protocol"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
