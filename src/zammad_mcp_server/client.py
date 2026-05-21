@@ -13,6 +13,7 @@ from zammad_mcp_server.models import (
     Article,
     ArticleCreateRequest,
     Group,
+    GroupCreateRequest,
     Organization,
     OrganizationCreateRequest,
     SearchResult,
@@ -619,6 +620,20 @@ class ZammadClient:
             self._groups_cache[group.id] = group
 
         return groups
+
+    def create_group(self, request: GroupCreateRequest) -> Group:
+        """Create a new group."""
+        data: dict[str, Any] = {
+            "name": request.name,
+            "active": request.active,
+        }
+        if request.note:
+            data["note"] = request.note
+
+        result = self._request("POST", "/groups", json=data)
+        group = Group.model_validate(result)
+        self._groups_cache[group.id] = group
+        return group
 
     def get_ticket_states(self) -> list[dict[str, Any]]:
         """Get all available ticket states."""

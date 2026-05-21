@@ -253,6 +253,16 @@ class Group(BaseModel):
     user_ids: list[int] | None = Field(alias="userIds", default=None)
 
 
+class GroupCreateRequest(BaseModel):
+    """Request model for creating a group."""
+
+    model_config = ConfigDict(extra="allow")
+
+    name: str = Field(..., min_length=1, max_length=500)
+    active: bool = True
+    note: str | None = None
+
+
 class TicketStats(BaseModel):
     """Ticket statistics."""
 

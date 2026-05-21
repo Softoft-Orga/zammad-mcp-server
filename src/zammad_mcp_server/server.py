@@ -13,6 +13,7 @@ from zammad_mcp_server.access_control import AccessController, Permission
 from zammad_mcp_server.client import ZammadClient, ZammadClientError, NotFoundError
 from zammad_mcp_server.models import (
     ArticleCreateRequest,
+    GroupCreateRequest,
     OrganizationCreateRequest,
     TicketCreateRequest,
     TicketUpdateRequest,
@@ -852,6 +853,30 @@ def list_groups() -> dict[str, Any]:
         "groups": [g.model_dump() for g in groups],
         "count": len(groups),
     }
+
+
+@mcp.tool()
+def create_group(
+    name: str,
+    active: bool = True,
+    note: str | None = None,
+) -> dict[str, Any]:
+    """Create a new group.
+
+    Args:
+        name: Group name
+        active: Whether the group is active
+        note: Internal note about the group
+
+    Returns:
+        The created group details.
+    """
+    check_access("create_group", Permission.WRITE)
+    client = get_client()
+
+    request = GroupCreateRequest(name=name, active=active, note=note)
+    group = client.create_group(request)
+    return group.model_dump()
 
 
 # ==================== Resources ====================

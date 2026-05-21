@@ -1,0 +1,42 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.softoft-orga/zammad-mcp-server",
+  "title": "Zammad MCP Server",
+  "description": "A production-ready Model Context Protocol server for Zammad, the open-source helpdesk and ticket system.",
+  "repository": {
+    "url": "https://github.com/Softoft-Orga/zammad-mcp-server",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "zammad-mcp-server",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "ZAMMAD_URL",
+          "description": "Base URL of your Zammad instance.",
+          "isRequired": true,
+          "format": "uri"
+        },
+        {
+          "name": "ZAMMAD_HTTP_TOKEN",
+          "description": "Zammad API token.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "MCP_DENIED_TOOLS",
+          "description": "Comma-separated list of disabled MCP tools, for example delete_ticket,delete_user,delete_organization.",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

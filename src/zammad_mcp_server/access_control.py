@@ -63,6 +63,7 @@ TOOL_CATEGORIES: dict[str, ToolCategory] = {
     # Group tools
     "get_group": ToolCategory.GROUPS,
     "list_groups": ToolCategory.GROUPS,
+    "create_group": ToolCategory.GROUPS,
     # Search tools
     "search": ToolCategory.SEARCH,
     "full_text_search": ToolCategory.SEARCH,

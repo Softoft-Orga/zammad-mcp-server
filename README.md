@@ -1,5 +1,7 @@
 # Zammad MCP Server
 
+<!-- mcp-name: io.github.softoft-orga/zammad-mcp-server -->
+
 A powerful, production-ready Model Context Protocol (MCP) server for [Zammad](https://zammad.com) - the open-source helpdesk and ticket system.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)

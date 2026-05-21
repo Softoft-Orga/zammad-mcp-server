@@ -1,6 +1,6 @@
 """Zammad MCP Server - A powerful MCP server for Zammad ticket system."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Open Ticket AI"
 __email__ = "tobias.bueck@openticketai.com"
 
