@@ -24,7 +24,35 @@ The Zammad MCP Server provides AI assistants (like Claude) with structured, type
 - **Extensible**: Easy to add new tools and integrations
 - **Well-Tested**: Comprehensive test suite with 90%+ coverage
 
+## Documentation
+
+Full guides, security checklists, and deployment notes live on the Open Ticket AI website:
+
+| Page | What you will learn |
+| --- | --- |
+| [Zammad MCP Server (overview)](https://openticketai.com/en/docs/zammad-mcp-server/) | Who it is for and how it fits the Zammad + AI landscape |
+| [Quick Start](https://openticketai.com/en/docs/zammad-mcp-server/quick-start/) | Install and run `health_check` in minutes |
+| [Claude & Cursor Setup](https://openticketai.com/en/docs/zammad-mcp-server/claude-cursor/) | MCP client configuration |
+| [Configuration](https://openticketai.com/en/docs/zammad-mcp-server/configuration/) | Environment variables and access policies |
+| [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/) | All MCP tools by category |
+| [Security](https://openticketai.com/en/docs/zammad-mcp-server/security/) | Tokens, least privilege, production checklist |
+| [Deployment](https://openticketai.com/en/docs/zammad-mcp-server/deployment/) | Docker, SSE, and production notes |
+
+**Tutorial:** [Zammad MCP Server — setup and usage (blog)](https://openticketai.com/en/docs/blog/zammad-mcp-server-setup-and-usage/)
+
+**Deutsch:** [Zammad MCP Server Dokumentation](https://openticketai.com/de/docs/zammad-mcp-server/) · [Einrichtung und Nutzung (Blog)](https://openticketai.com/de/docs/blog/zammad-mcp-server-einrichtung-und-nutzung/)
+
+### How this fits the Zammad + AI landscape
+
+- **[Zammad 7 native AI](https://openticketai.com/en/docs/blog/zammad-ai-zammad-7-ki-funktionen-leitfaden/)** — built-in summaries and writing assistant inside the Zammad UI.
+- **Zammad MCP Server (this project)** — connects **external** MCP clients (Claude Desktop, Cursor, custom agents) to Zammad.
+- **[Open Ticket AI Runtime](https://openticketai.com/en/docs/otai-runtime/)** — on-prem inference with **custom-trained** models via the OTAI Zammad connector ([integration guide](https://openticketai.com/en/docs/blog/integrating-zammad-open-ticket-ai/)).
+
+All three can coexist. MCP is the fastest path to “talk to my helpdesk from Claude.” Need custom models on your queues? See [Open Ticket AI for Zammad](https://openticketai.com/en/solutions/zammad/).
+
 ## Quick Start
+
+> Step-by-step walkthrough: [Quick Start guide](https://openticketai.com/en/docs/zammad-mcp-server/quick-start/)
 
 ### Installation
 
@@ -48,6 +76,8 @@ uv sync --extra dev
 
 ### Configuration
 
+See the [Configuration guide](https://openticketai.com/en/docs/zammad-mcp-server/configuration/) for all environment variables and access policies.
+
 Create a `.env` file:
 
 ```env
@@ -70,6 +100,8 @@ zammad-mcp-server --transport sse --port 8000
 ```
 
 ### Claude Desktop / Cursor
+
+Full client setup: [Claude & Cursor Setup](https://openticketai.com/en/docs/zammad-mcp-server/claude-cursor/)
 
 Add to `claude_desktop_config.json` or Cursor **Settings → MCP**:
 
@@ -121,7 +153,7 @@ pytest tests/test_models.py -v
 
 ## Available Tools
 
-The server provides 30+ tools organized into categories:
+The server provides 30+ tools organized into categories. Full reference: [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/)
 
 ### Tickets
 - `get_ticket` - Get ticket details
@@ -161,7 +193,7 @@ The server provides 30+ tools organized into categories:
 
 ## Access Control
 
-The server includes a sophisticated access control system:
+The server includes a sophisticated access control system. Production checklist: [Security guide](https://openticketai.com/en/docs/zammad-mcp-server/security/)
 
 ### Permission Levels
 
@@ -236,7 +268,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed technical documentation
 
 ## Authentication Methods
 
-The server supports three authentication methods:
+The server supports three authentication methods. Details: [Configuration — authentication](https://openticketai.com/en/docs/zammad-mcp-server/configuration/)
 
 ### 1. API Token (Recommended)
 
@@ -294,11 +326,7 @@ docker run -p 8000:8000 -e ZAMMAD_URL=$ZAMMAD_URL zammad-mcp-server
 
 ### 3. Cloud Deployment
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for cloud deployment guides:
-- Google Cloud Run
-- AWS Lambda
-- Railway
-- Fly.io
+See the [Deployment guide](https://openticketai.com/en/docs/zammad-mcp-server/deployment/) for Docker, SSE, and production hosting (Google Cloud Run, Railway, Fly.io, and more).
 
 ## Contributing
 
@@ -331,7 +359,8 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 
 ## Support
 
-- 📖 [Documentation](https://github.com/Softoft-Orga/zammad-mcp-server/tree/main/docs)
+- 📖 [Documentation (EN)](https://openticketai.com/en/docs/zammad-mcp-server/) · [Dokumentation (DE)](https://openticketai.com/de/docs/zammad-mcp-server/)
+- 📘 [Setup tutorial (blog)](https://openticketai.com/en/docs/blog/zammad-mcp-server-setup-and-usage/)
 - 🐛 [Issue Tracker](https://github.com/Softoft-Orga/zammad-mcp-server/issues)
 - 💬 [Discussions](https://github.com/Softoft-Orga/zammad-mcp-server/discussions)
 
