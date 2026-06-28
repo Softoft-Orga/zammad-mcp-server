@@ -19,7 +19,7 @@ This guide covers various deployment options for the Zammad MCP Server, from loc
 ### Prerequisites
 
 - Python 3.11 or higher
-- A running Zammad instance (local or remote)
+- A running Zammad instance (local or remote; **6.0+**, tested with **7.1**)
 - API token from Zammad (Profile → Token Access)
 
 ### Minimal Setup
@@ -40,10 +40,13 @@ zammad-mcp-server
 
 ### Using Docker Compose
 
-We provide a complete Zammad development environment:
+We provide a complete Zammad development environment. Default image: **Zammad 7.1**.
+Override with `ZAMMAD_VERSION` in `docker/.env` (see [COMPATIBILITY.md](COMPATIBILITY.md)
+and [docker/README.md](../docker/README.md)):
 
 ```bash
 cd docker
+cp .env.example .env   # optional: set ZAMMAD_VERSION=6.5, 7.0, etc.
 docker-compose up -d
 
 # Wait for initialization (2-3 minutes)
@@ -52,6 +55,9 @@ docker-compose logs -f zammad-init
 # Access Zammad at http://localhost:8080
 # Default: admin@example.com / admin
 ```
+
+The MCP server itself is unchanged — it connects to any Zammad **6.0+** instance via
+the REST API. The dev stack simply tracks the current Zammad release we test against.
 
 ### Running the Server Locally
 

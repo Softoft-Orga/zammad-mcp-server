@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "zammad-mcp-server"
 version = "0.1.1"
-description = "A powerful Model Context Protocol (MCP) server for Zammad ticket system"
+description = "Production-ready Zammad MCP Server for Zammad 6.0+ and 7.x (tested on 7.1). Connect Claude, Cursor, and LLMs to your helpdesk via MCP."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -16,7 +16,19 @@ authors = [
 maintainers = [
     { name = "Softoft", email = "tobias.bueck@openticketai.com" },
 ]
-keywords = ["mcp", "zammad", "tickets", "ai", "claude", "helpdesk", "model-context-protocol"]
+keywords = [
+    "zammad-mcp",
+    "zammad-mcp-server",
+    "zammad-ai-mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "claude",
+    "cursor",
+    "helpdesk",
+    "ticket-system",
+    "ticketing",
+    "ai-agents",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

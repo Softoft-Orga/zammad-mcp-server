@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.softoft-orga/zammad-mcp-server",
   "title": "Zammad MCP Server",
-  "description": "A production-ready Model Context Protocol server for Zammad, the open-source helpdesk and ticket system.",
+  "description": "Production-ready Zammad MCP Server for Zammad 6.0+ and 7.x (tested on 7.1). Connect Claude, Cursor, and LLMs to your helpdesk via MCP.",
   "repository": {
     "url": "https://github.com/Softoft-Orga/zammad-mcp-server",
     "source": "github"
@@ -21,7 +21,7 @@
           "name": "ZAMMAD_URL",
           "description": "Base URL of your Zammad instance.",
           "isRequired": true,
-          "format": "uri"
+          "format": "string"
         },
         {
           "name": "ZAMMAD_HTTP_TOKEN",

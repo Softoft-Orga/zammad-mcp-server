@@ -48,7 +48,7 @@ services:
       - zammad-network
 
   zammad-init:
-    image: ghcr.io/zammad/zammad:6.3
+    image: ghcr.io/zammad/zammad:${ZAMMAD_VERSION:-7.1}
     container_name: zammad-init
     environment:
       - MEMCACHE_SERVERS=zammad-redis:6379
@@ -74,7 +74,7 @@ services:
       - zammad-network
 
   zammad-railsserver:
-    image: ghcr.io/zammad/zammad:6.3
+    image: ghcr.io/zammad/zammad:${ZAMMAD_VERSION:-7.1}
     container_name: zammad-railsserver
     environment:
       - MEMCACHE_SERVERS=zammad-redis:6379
