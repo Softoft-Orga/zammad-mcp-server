@@ -10,6 +10,7 @@ from zammad_mcp_server.models import (
     ArticleCreateRequest,
     ArticleType,
     Group,
+    GroupBrief,
     Organization,
     OrganizationCreateRequest,
     PriorityBrief,
