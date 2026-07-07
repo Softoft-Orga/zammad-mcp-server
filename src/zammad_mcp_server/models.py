@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 
 class TicketState(str, Enum):
@@ -102,7 +102,7 @@ class Article(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     id: int
-    ticket_id: int = Field(alias="ticketId")
+    ticket_id: int = Field(validation_alias=AliasChoices("ticket_id", "ticketId"))
     type: str | None = None
     sender: str | None = None
     subject: str | None = None
