@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 
 class TicketState(str, Enum):
@@ -50,7 +50,7 @@ class Visibility(str, Enum):
 class StateBrief(BaseModel):
     """Brief state information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -60,7 +60,7 @@ class StateBrief(BaseModel):
 class PriorityBrief(BaseModel):
     """Brief priority information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -69,7 +69,7 @@ class PriorityBrief(BaseModel):
 class GroupBrief(BaseModel):
     """Brief group information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -78,7 +78,7 @@ class GroupBrief(BaseModel):
 class UserBrief(BaseModel):
     """Brief user information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     firstname: str | None = None
@@ -90,7 +90,7 @@ class UserBrief(BaseModel):
 class OrganizationBrief(BaseModel):
     """Brief organization information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -99,10 +99,10 @@ class OrganizationBrief(BaseModel):
 class Article(BaseModel):
     """Zammad article (ticket message/comment)."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
-    ticket_id: int = Field(alias="ticketId")
+    ticket_id: int = Field(validation_alias=AliasChoices("ticket_id", "ticketId"))
     type: str | None = None
     sender: str | None = None
     subject: str | None = None
@@ -128,7 +128,7 @@ class Article(BaseModel):
 class Ticket(BaseModel):
     """Zammad ticket model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     number: str | None = None
@@ -191,7 +191,7 @@ class Ticket(BaseModel):
 class User(BaseModel):
     """Zammad user model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     login: str | None = None
@@ -225,7 +225,7 @@ class User(BaseModel):
 class Organization(BaseModel):
     """Zammad organization model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -242,7 +242,7 @@ class Organization(BaseModel):
 class Group(BaseModel):
     """Zammad group model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -256,7 +256,7 @@ class Group(BaseModel):
 class GroupCreateRequest(BaseModel):
     """Request model for creating a group."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     name: str = Field(..., min_length=1, max_length=500)
     active: bool = True
@@ -266,7 +266,7 @@ class GroupCreateRequest(BaseModel):
 class TicketStats(BaseModel):
     """Ticket statistics."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     total: int
     open: int
@@ -281,7 +281,7 @@ class TicketStats(BaseModel):
 class SearchResult(BaseModel):
     """Generic search result wrapper."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     items: list[Any]
     total_count: int
@@ -293,7 +293,7 @@ class SearchResult(BaseModel):
 class TicketCreateRequest(BaseModel):
     """Request model for creating a ticket."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     title: str = Field(..., min_length=1, max_length=500)
     group: str = Field(..., min_length=1)
@@ -309,7 +309,7 @@ class TicketCreateRequest(BaseModel):
 class TicketUpdateRequest(BaseModel):
     """Request model for updating a ticket."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     title: str | None = Field(None, max_length=500)
     group: str | None = None
@@ -322,7 +322,7 @@ class TicketUpdateRequest(BaseModel):
 class ArticleCreateRequest(BaseModel):
     """Request model for creating an article."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     ticket_id: int = Field(..., gt=0)
     subject: str | None = Field(None, max_length=500)
@@ -336,7 +336,7 @@ class ArticleCreateRequest(BaseModel):
 class UserCreateRequest(BaseModel):
     """Request model for creating a user."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     login: str | None = None
     firstname: str | None = None
@@ -352,7 +352,7 @@ class UserCreateRequest(BaseModel):
 class OrganizationCreateRequest(BaseModel):
     """Request model for creating an organization."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     name: str = Field(..., min_length=1, max_length=500)
     shared: bool = True
