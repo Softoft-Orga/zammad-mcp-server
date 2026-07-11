@@ -46,3 +46,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Make package public
+        run: |
+          gh api \
+            --method PATCH \
+            "/orgs/${{ github.repository_owner }}/packages/container/zammad-mcp-server" \
+            -f visibility='public'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
