@@ -10,6 +10,7 @@ from zammad_mcp_server.models import (
     ArticleCreateRequest,
     ArticleType,
     Group,
+    GroupBrief,
     Organization,
     OrganizationCreateRequest,
     PriorityBrief,
@@ -154,6 +155,27 @@ class TestArticleModel:
         """Test that internal defaults to False."""
         article = Article(id=1, ticket_id=100)
         assert article.internal is False
+
+
+    def test_article_accepts_zammad_snake_case_ticket_id(self) -> None:
+        """Test article parsing from Zammad API response format."""
+        article = Article.model_validate({
+            "id": 1,
+            "ticket_id": 100,
+            "body": "This is the article body",
+        })
+
+        assert article.ticket_id == 100
+
+    def test_article_accepts_camel_case_ticket_id(self) -> None:
+        """Test article parsing remains compatible with camelCase ticketId."""
+        article = Article.model_validate({
+            "id": 1,
+            "ticketId": 100,
+            "body": "This is the article body",
+        })
+
+        assert article.ticket_id == 100
 
 
 class TestOrganizationModel:
