@@ -380,6 +380,19 @@ zammad-mcp-server
 
 ### 2. Docker Container
 
+Published images are on **GitHub Container Registry** (`ghcr.io`):
+
+```bash
+docker pull ghcr.io/softoft-orga/zammad-mcp-server:latest
+
+docker run -p 8000:8000 \
+  -e ZAMMAD_URL=https://your-zammad.com \
+  -e ZAMMAD_HTTP_TOKEN=your_token \
+  ghcr.io/softoft-orga/zammad-mcp-server:latest
+```
+
+Build locally:
+
 ```bash
 docker build -t zammad-mcp-server .
 docker run -p 8000:8000 -e ZAMMAD_URL=$ZAMMAD_URL zammad-mcp-server

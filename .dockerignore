@@ -33,7 +33,7 @@ Thumbs.db
 
 # Documentation (can be built separately)
 docs/
-*.md
+CONTRIBUTING.md
 
 # Docker
 docker/volumes/

@@ -18,21 +18,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir \
-    fastmcp>=2.0.0 \
-    pydantic>=2.0.0 \
-    httpx>=0.27.0 \
-    structlog>=24.1.0 \
-    cachetools>=5.3.0 \
-    python-dotenv>=1.0.0
-
-# Copy source code
+# Copy package metadata and source
+COPY pyproject.toml README.md LICENSE ./
 COPY src/ ./src/
 
-# Install the package
-RUN pip install -e .
+# Install the package (non-editable for production)
+RUN pip install .
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
@@ -46,4 +37,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command (stdio for local, override for SSE)
-CMD ["zammad-mcp-server"]
+CMD ["zammad-mcp-server", "--transport", "sse", "--port", "8000"]
