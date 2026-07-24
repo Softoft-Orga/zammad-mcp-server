@@ -223,7 +223,9 @@ The server provides 30+ MCP tools for Zammad, organized into categories. Full re
 - `update_ticket` - Update ticket properties
 - `delete_ticket` - Delete tickets (admin)
 - `get_ticket_articles` - Get all messages
-- `create_article` - Add responses/notes
+- `create_article` - Add responses/notes (optional `time_unit` books linked time accounting)
+- `create_time_accounting` - Book time on a ticket (unit as configured in Zammad, e.g. minutes)
+- `get_time_accountings` - List booked time entries and their total for a ticket
 - `get_ticket_stats` - Analytics and metrics
 - `get_ticket_states` - List available states
 - `get_priorities` - List priority levels

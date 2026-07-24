@@ -395,6 +395,8 @@ def create_article(
     internal: bool = False,
     to: str | None = None,
     cc: str | None = None,
+    time_unit: float | None = None,
+    time_accounting_type_id: int | None = None,
 ) -> dict[str, Any]:
     """Add a new article to an existing ticket.
 
@@ -406,6 +408,11 @@ def create_article(
         internal: Whether this is an internal-only note
         to: Recipient email (for email type)
         cc: CC recipients (for email type)
+        time_unit: Optional time to book in the unit configured in Zammad
+            (for example minutes). On instances configured for minutes, pass
+            60 for one hour. Booked as a time accounting entry linked to the
+            new article.
+        time_accounting_type_id: Optional time accounting type id
 
     Returns:
         The created article details.
@@ -428,10 +435,71 @@ def create_article(
         internal=internal,
         to=to,
         cc=cc,
+        time_unit=time_unit,
+        time_accounting_type_id=time_accounting_type_id,
     )
 
     article = client.create_article(request)
     return article.model_dump()
+
+
+@mcp.tool()
+def create_time_accounting(
+    ticket_id: int,
+    time_unit: float,
+    type_id: int | None = None,
+    article_id: int | None = None,
+) -> dict[str, Any]:
+    """Book a time accounting entry on a ticket.
+
+    Args:
+        ticket_id: The ID of the ticket to book time on
+        time_unit: Amount of time in the unit configured in Zammad (for
+            example minutes). On instances configured for minutes, pass 60
+            for one hour.
+        type_id: Optional time accounting type id
+        article_id: Optional article to link the time entry to
+
+    Returns:
+        The created time accounting entry.
+    """
+    check_access("create_time_accounting", Permission.WRITE)
+    client = get_client()
+    return client.create_time_accounting(
+        ticket_id=ticket_id,
+        time_unit=time_unit,
+        type_id=type_id,
+        ticket_article_id=article_id,
+    )
+
+
+@mcp.tool()
+def get_time_accountings(ticket_id: int) -> dict[str, Any]:
+    """Get all time accounting entries booked on a ticket.
+
+    Args:
+        ticket_id: The ID of the ticket
+
+    Returns:
+        The list of time accounting entries and their total.
+    """
+    check_access("get_time_accountings", Permission.READ_ONLY)
+    client = get_client()
+    entries = client.get_time_accountings(ticket_id)
+
+    def _to_float(value: Any) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    total = sum(_to_float(e.get("time_unit")) for e in entries)
+    return {
+        "ticket_id": ticket_id,
+        "entries": entries,
+        "count": len(entries),
+        "total_time_unit": total,
+    }
 
 
 @mcp.tool()

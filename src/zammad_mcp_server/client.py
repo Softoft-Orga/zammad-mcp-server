@@ -322,7 +322,11 @@ class ZammadClient:
         return [Article.model_validate(a) for a in articles_data]
 
     def create_article(self, request: ArticleCreateRequest) -> Article:
-        """Create a new article on a ticket."""
+        """Create a new article on a ticket.
+
+        If ``request.time_unit`` is set, a linked time accounting entry is
+        booked on the ticket after the article has been created.
+        """
         data: dict[str, Any] = {
             "ticket_id": request.ticket_id,
             "body": request.body,
@@ -338,7 +342,55 @@ class ZammadClient:
             data["cc"] = request.cc
 
         result = self._request("POST", "/ticket_articles", json=data)
-        return Article.model_validate(result)
+        article = Article.model_validate(result)
+
+        if request.time_unit is not None:
+            self.create_time_accounting(
+                ticket_id=request.ticket_id,
+                time_unit=request.time_unit,
+                type_id=request.time_accounting_type_id,
+                ticket_article_id=article.id,
+            )
+
+        return article
+
+    def create_time_accounting(
+        self,
+        ticket_id: int,
+        time_unit: float,
+        type_id: int | None = None,
+        ticket_article_id: int | None = None,
+    ) -> dict[str, Any]:
+        """Book a time accounting entry on a ticket.
+
+        Args:
+            ticket_id: Ticket to book the time on.
+            time_unit: Amount of time in the unit configured in Zammad
+                (for example minutes). On instances configured for minutes,
+                pass 60 for one hour.
+            type_id: Optional time accounting type id.
+            ticket_article_id: Optional article to link the entry to.
+
+        Returns:
+            The created time accounting entry as returned by Zammad.
+        """
+        data: dict[str, Any] = {"time_unit": str(time_unit)}
+        if type_id is not None:
+            data["type_id"] = type_id
+        if ticket_article_id is not None:
+            data["ticket_article_id"] = ticket_article_id
+
+        result = self._request(
+            "POST", f"/tickets/{ticket_id}/time_accountings", json=data
+        )
+        return result  # type: ignore[return-value]
+
+    def get_time_accountings(self, ticket_id: int) -> list[dict[str, Any]]:
+        """Get all time accounting entries for a ticket."""
+        result = self._request("GET", f"/tickets/{ticket_id}/time_accountings")
+        if isinstance(result, list):
+            return result
+        return result.get("time_accountings", [])  # type: ignore[union-attr]
 
     def get_ticket_stats(
         self,

@@ -99,7 +99,7 @@ class OrganizationBrief(BaseModel):
 class Article(BaseModel):
     """Zammad article (ticket message/comment)."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     ticket_id: int = Field(alias="ticketId")
@@ -331,6 +331,11 @@ class ArticleCreateRequest(BaseModel):
     internal: bool = False
     to: str | None = None
     cc: str | None = None
+    # Zeiterfassung: erfasste Zeit in der im Zammad konfigurierten Einheit
+    # (z. B. Minuten). Wird nach dem Anlegen des Artikels als Time-Accounting
+    # gebucht und mit dem Artikel verknuepft.
+    time_unit: float | None = Field(default=None, ge=0)
+    time_accounting_type_id: int | None = None
 
 
 class UserCreateRequest(BaseModel):
@@ -359,3 +364,17 @@ class OrganizationCreateRequest(BaseModel):
     note: str | None = None
     domain: str | None = None
     active: bool = True
+
+
+class TimeAccounting(BaseModel):
+    """Zammad time accounting entry (erfasste Zeit auf einem Ticket)."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    id: int | None = None
+    ticket_id: int | None = Field(alias="ticketId", default=None)
+    ticket_article_id: int | None = Field(alias="ticketArticleId", default=None)
+    time_unit: float | str | None = Field(alias="timeUnit", default=None)
+    type_id: int | None = Field(alias="typeId", default=None)
+    created_at: datetime | None = Field(alias="createdAt", default=None)
+    created_by_id: int | None = Field(alias="createdById", default=None)
