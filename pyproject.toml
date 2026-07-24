@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zammad-mcp-server"
-version = "0.1.1"
+version = "0.2.0"
 description = "Production-ready Zammad MCP Server for Zammad 6.0+ and 7.x (tested on 7.1). Connect Claude, Cursor, and LLMs to your helpdesk via MCP."
 readme = "README.md"
 license = "MIT"

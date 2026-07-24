@@ -44,6 +44,8 @@ TOOL_CATEGORIES: dict[str, ToolCategory] = {
     "delete_ticket": ToolCategory.TICKETS,
     "get_ticket_articles": ToolCategory.TICKETS,
     "create_article": ToolCategory.TICKETS,
+    "create_time_accounting": ToolCategory.TICKETS,
+    "get_time_accountings": ToolCategory.TICKETS,
     "get_ticket_stats": ToolCategory.TICKETS,
     "merge_tickets": ToolCategory.TICKETS,
     "link_tickets": ToolCategory.TICKETS,
