@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock
 
+import httpx
 import pytest
 import respx
 from httpx import Response
@@ -13,22 +14,23 @@ from httpx import Response
 os.environ["ZAMMAD_URL"] = "http://test-zammad.local"
 os.environ["ZAMMAD_HTTP_TOKEN"] = "test-token"
 
-from zammad_mcp_server.access_control import AccessController, AccessPolicy, Permission, ToolCategory
+from zammad_mcp_server.access_control import (
+    AccessController,
+    AccessPolicy,
+    Permission,
+    ToolCategory,
+)
 from zammad_mcp_server.client import ZammadClient
 from zammad_mcp_server.models import (
     Article,
     Group,
-    GroupBrief,
     Organization,
-    PriorityBrief,
-    StateBrief,
     Ticket,
     User,
-    UserBrief,
 )
 
-
 # ============== Fixture Factories ==============
+
 
 def create_ticket_data(
     ticket_id: int = 1,
@@ -43,11 +45,18 @@ def create_ticket_data(
         "id": ticket_id,
         "number": f"#{ticket_id:06d}",
         "title": title,
-        "state": state if kwargs.get("expand", False) else {"id": 2, "name": state, "stateType": "open"},
+        "state": state
+        if kwargs.get("expand", False)
+        else {"id": 2, "name": state, "stateType": "open"},
         "priority": priority if kwargs.get("expand", False) else {"id": 2, "name": priority},
         "group": group if kwargs.get("expand", False) else {"id": 1, "name": group},
-        "owner": kwargs.get("owner", {"id": 1, "firstname": "Agent", "lastname": "User", "email": "agent@test.com"}),
-        "customer": kwargs.get("customer", {"id": 2, "firstname": "Customer", "lastname": "User", "email": "customer@test.com"}),
+        "owner": kwargs.get(
+            "owner", {"id": 1, "firstname": "Agent", "lastname": "User", "email": "agent@test.com"}
+        ),
+        "customer": kwargs.get(
+            "customer",
+            {"id": 2, "firstname": "Customer", "lastname": "User", "email": "customer@test.com"},
+        ),
         "articleCount": kwargs.get("article_count", 3),
         "createdAt": kwargs.get("created_at", datetime.now().isoformat()),
         "updatedAt": kwargs.get("updated_at", datetime.now().isoformat()),
@@ -126,6 +135,7 @@ def create_organization_data(
 
 # ============== Pytest Fixtures ==============
 
+
 @pytest.fixture
 def mock_zammad_client() -> MagicMock:
     """Create a mock Zammad client."""
@@ -162,24 +172,27 @@ def sample_organization() -> Organization:
 @pytest.fixture
 def sample_group() -> Group:
     """Create a sample Group model instance."""
-    return Group.model_validate({
-        "id": 1,
-        "name": "Users",
-        "active": True,
-        "userIds": [1, 2, 3],
-        "createdAt": datetime.now().isoformat(),
-        "updatedAt": datetime.now().isoformat(),
-    })
+    return Group.model_validate(
+        {
+            "id": 1,
+            "name": "Users",
+            "active": True,
+            "userIds": [1, 2, 3],
+            "createdAt": datetime.now().isoformat(),
+            "updatedAt": datetime.now().isoformat(),
+        }
+    )
 
 
 @pytest.fixture
 def unrestricted_policy() -> AccessPolicy:
     """Create an unrestricted access policy."""
     return AccessPolicy(
-        default_permission=Permission.WRITE,
+        default_permission=Permission.ADMIN,
         category_permissions={
-            ToolCategory.ALL: Permission.WRITE,
+            ToolCategory.ALL: Permission.ADMIN,
         },
+        rate_limit_per_minute=0,
     )
 
 
@@ -196,6 +209,7 @@ def read_only_policy() -> AccessPolicy:
             ToolCategory.ADMIN: Permission.DENIED,
             ToolCategory.SYSTEM: Permission.READ_ONLY,
         },
+        rate_limit_per_minute=0,
     )
 
 
@@ -213,6 +227,7 @@ def restricted_policy() -> AccessPolicy:
         },
         denied_tools={"delete_ticket"},
         allowed_groups={"Users", "Support"},
+        rate_limit_per_minute=0,
     )
 
 
@@ -248,6 +263,7 @@ def mock_httpx_client() -> MagicMock:
 
 # ============== Respx Routes Fixture ==============
 
+
 @pytest.fixture
 def zammad_api_mock(respx_mock: respx.MockRouter) -> respx.MockRouter:
     """Setup common Zammad API mock routes."""
@@ -260,31 +276,41 @@ def zammad_api_mock(respx_mock: respx.MockRouter) -> respx.MockRouter:
 
     # Server info
     respx_mock.get(f"{base_url}/system/").mock(
-        return_value=Response(200, json={
-            "version": "6.0.0",
-            "product_name": "Zammad",
-            "settings": {},
-        })
+        return_value=Response(
+            200,
+            json={
+                "version": "6.0.0",
+                "product_name": "Zammad",
+                "settings": {},
+            },
+        )
     )
 
-    # Ticket routes
+    # Ticket search must be registered before the generic /tickets/ prefix.
+    respx_mock.get(url__startswith=f"{base_url}/tickets/search").mock(
+        return_value=Response(
+            200,
+            json={
+                "tickets": [create_ticket_data(ticket_id=i, expand=True) for i in range(1, 4)],
+                "tickets_count": 3,
+            },
+        )
+    )
+
     respx_mock.get(url__startswith=f"{base_url}/tickets/").mock(
         return_value=Response(200, json=create_ticket_data(expand=True))
     )
 
-    respx_mock.get(url__startswith=f"{base_url}/tickets/search").mock(
-        return_value=Response(200, json={
-            "tickets": [create_ticket_data(id=i, expand=True) for i in range(1, 4)],
-            "tickets_count": 3,
-        })
-    )
-
     respx_mock.post(f"{base_url}/tickets").mock(
-        return_value=Response(201, json=create_ticket_data(id=999, expand=True))
+        return_value=Response(
+            201, json=create_ticket_data(ticket_id=999, title="New Ticket", expand=True)
+        )
     )
 
     respx_mock.put(url__startswith=f"{base_url}/tickets/").mock(
-        return_value=Response(200, json=create_ticket_data(id=1, title="Updated", expand=True))
+        return_value=Response(
+            200, json=create_ticket_data(ticket_id=1, title="Updated Title", expand=True)
+        )
     )
 
     respx_mock.delete(url__startswith=f"{base_url}/tickets/").mock(
@@ -292,84 +318,117 @@ def zammad_api_mock(respx_mock: respx.MockRouter) -> respx.MockRouter:
     )
 
     # User routes
-    respx_mock.get(url__startswith=f"{base_url}/users/").mock(
-        return_value=Response(200, json=create_user_data(expand=True))
+    respx_mock.get(url__startswith=f"{base_url}/users/search").mock(
+        return_value=Response(
+            200,
+            json={
+                "users": [create_user_data(user_id=i) for i in range(1, 4)],
+                "users_count": 3,
+            },
+        )
     )
 
-    respx_mock.get(url__startswith=f"{base_url}/users/search").mock(
-        return_value=Response(200, json={
-            "users": [create_user_data(id=i) for i in range(1, 4)],
-            "users_count": 3,
-        })
+    respx_mock.get(url__startswith=f"{base_url}/users/").mock(
+        return_value=Response(200, json=create_user_data())
     )
 
     respx_mock.post(f"{base_url}/users").mock(
-        return_value=Response(201, json=create_user_data(id=999))
+        return_value=Response(201, json=create_user_data(user_id=999, email="new@example.com"))
+    )
+
+    respx_mock.put(url__startswith=f"{base_url}/users/").mock(
+        return_value=Response(200, json=create_user_data(user_id=1, firstname="Ann"))
+    )
+    respx_mock.delete(url__startswith=f"{base_url}/users/").mock(
+        return_value=Response(200, json={})
+    )
+    respx_mock.put(url__startswith=f"{base_url}/organizations/").mock(
+        return_value=Response(200, json=create_organization_data(org_id=1, note="n"))
+    )
+    respx_mock.delete(url__startswith=f"{base_url}/organizations/").mock(
+        return_value=Response(200, json={})
     )
 
     # Organization routes
+    respx_mock.get(url__startswith=f"{base_url}/organizations/search").mock(
+        return_value=Response(
+            200,
+            json={
+                "organizations": [create_organization_data(org_id=i) for i in range(1, 4)],
+                "organizations_count": 3,
+            },
+        )
+    )
+
     respx_mock.get(url__startswith=f"{base_url}/organizations/").mock(
         return_value=Response(200, json=create_organization_data())
     )
 
-    respx_mock.get(url__startswith=f"{base_url}/organizations/search").mock(
-        return_value=Response(200, json={
-            "organizations": [create_organization_data(id=i) for i in range(1, 4)],
-            "organizations_count": 3,
-        })
-    )
-
     respx_mock.post(f"{base_url}/organizations").mock(
-        return_value=Response(201, json=create_organization_data(id=999))
+        return_value=Response(201, json=create_organization_data(org_id=999, name="New Org"))
     )
 
     # Group routes
     respx_mock.get(url__startswith=f"{base_url}/groups").mock(
-        return_value=Response(200, json=[{
-            "id": 1,
-            "name": "Users",
-            "active": True,
-            "userIds": [1, 2, 3],
-        }])
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": 1,
+                    "name": "Users",
+                    "active": True,
+                    "userIds": [1, 2, 3],
+                }
+            ],
+        )
     )
 
     # Ticket states
     respx_mock.get(f"{base_url}/ticket_states").mock(
-        return_value=Response(200, json={
-            "ticket_states": [
-                {"id": 1, "name": "new", "stateType": "new"},
-                {"id": 2, "name": "open", "stateType": "open"},
-                {"id": 3, "name": "closed", "stateType": "closed"},
-            ]
-        })
+        return_value=Response(
+            200,
+            json={
+                "ticket_states": [
+                    {"id": 1, "name": "new", "stateType": "new"},
+                    {"id": 2, "name": "open", "stateType": "open"},
+                    {"id": 3, "name": "closed", "stateType": "closed"},
+                ]
+            },
+        )
     )
 
     # Priorities
     respx_mock.get(f"{base_url}/ticket_priorities").mock(
-        return_value=Response(200, json={
-            "ticket_priorities": [
-                {"id": 1, "name": "1 low"},
-                {"id": 2, "name": "2 normal"},
-                {"id": 3, "name": "3 high"},
-            ]
-        })
+        return_value=Response(
+            200,
+            json={
+                "ticket_priorities": [
+                    {"id": 1, "name": "1 low"},
+                    {"id": 2, "name": "2 normal"},
+                    {"id": 3, "name": "3 high"},
+                ]
+            },
+        )
     )
 
     # Article routes
     respx_mock.get(url__startswith=f"{base_url}/ticket_articles/by_ticket/").mock(
-        return_value=Response(200, json={
-            "ticket_articles": [create_article_data(id=i) for i in range(1, 4)]
-        })
+        return_value=Response(
+            200, json={"ticket_articles": [create_article_data(id=i) for i in range(1, 4)]}
+        )
     )
 
     respx_mock.post(f"{base_url}/ticket_articles").mock(
-        return_value=Response(201, json=create_article_data(id=999))
+        return_value=Response(
+            201, json=create_article_data(article_id=999, body="New article content")
+        )
     )
 
     return respx_mock
 
 
 # ============== Pytest Configuration ==============
+
 
 def pytest_configure(config: Any) -> None:
     """Configure pytest."""
@@ -379,9 +438,12 @@ def pytest_configure(config: Any) -> None:
 
 
 def pytest_collection_modifyitems(config: Any, items: list[Any]) -> None:
-    """Modify test collection."""
-    # Skip integration tests by default
-    skip_integration = pytest.mark.skip(reason="Integration test - requires real Zammad")
+    """Skip integration tests unless OTAI_RUN_ZAMMAD_INTEGRATION=1."""
+    if os.getenv("OTAI_RUN_ZAMMAD_INTEGRATION") == "1":
+        return
+    skip_integration = pytest.mark.skip(
+        reason="Integration test — set OTAI_RUN_ZAMMAD_INTEGRATION=1"
+    )
     for item in items:
         if "integration" in item.keywords:
             item.add_marker(skip_integration)

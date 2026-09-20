@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zammad-mcp-server"
-version = "0.1.1"
+version = "0.2.0"
 description = "Production-ready Zammad MCP Server for Zammad 6.0+ and 7.x (tested on 7.1). Connect Claude, Cursor, and LLMs to your helpdesk via MCP."
 readme = "README.md"
 license = "MIT"
@@ -17,28 +17,29 @@ maintainers = [
     { name = "Softoft", email = "tobias.bueck@openticketai.com" },
 ]
 keywords = [
-    "zammad-mcp",
-    "zammad-mcp-server",
-    "zammad-ai-mcp",
-    "model-context-protocol",
+    "zammad",
+    "mcp",
     "mcp-server",
+    "model-context-protocol",
     "claude",
     "cursor",
     "helpdesk",
-    "ticket-system",
-    "ticketing",
-    "ai-agents",
+    "tickets",
+    "itsm",
+    "customer-support",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Communications",
+    "Typing :: Typed",
 ]
 dependencies = [
     "fastmcp>=2.0.0",
@@ -62,13 +63,25 @@ dev = [
     "pre-commit>=3.7.0",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "respx>=0.21.0",
+    "mypy>=1.9.0",
+    "ruff>=0.4.0",
+    "pre-commit>=3.7.0",
+]
+
 [project.scripts]
 zammad-mcp-server = "zammad_mcp_server.server:main"
 
 [project.urls]
 Homepage = "https://github.com/Softoft-Orga/zammad-mcp-server"
 Repository = "https://github.com/Softoft-Orga/zammad-mcp-server"
-Documentation = "https://github.com/Softoft-Orga/zammad-mcp-server#readme"
+Documentation = "https://openticketai.com/en/docs/zammad-mcp-server/"
+Changelog = "https://github.com/Softoft-Orga/zammad-mcp-server/blob/main/CHANGELOG.md"
 Issues = "https://github.com/Softoft-Orga/zammad-mcp-server/issues"
 
 [tool.hatch.build.targets.wheel]
@@ -77,7 +90,8 @@ packages = ["src/zammad_mcp_server"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "-v --cov=zammad_mcp_server --cov-report=term-missing --cov-report=html:htmlcov"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-v"
 
 [tool.mypy]
 python_version = "3.11"
@@ -102,7 +116,7 @@ select = [
     "C4",  # flake8-comprehensions
     "SIM", # flake8-simplify
 ]
-ignore = ["E501"]
+ignore = ["E501", "SIM108", "SIM105", "UP042"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -112,6 +126,7 @@ source = ["src/zammad_mcp_server"]
 branch = true
 
 [tool.coverage.report]
+fail_under = 80
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",

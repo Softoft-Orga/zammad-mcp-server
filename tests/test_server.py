@@ -11,15 +11,20 @@ class TestHealthCheckTool:
 
     def test_health_check_success(self, unrestricted_controller: Any) -> None:
         """Test health check with working connection."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
-            mock_client.health_check.return_value = {"status": "healthy", "response": {"version": "6.0"}}
+            mock_client.health_check.return_value = {
+                "status": "healthy",
+                "response": {"version": "6.0"},
+            }
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import health_check
+
             result = health_check()
 
             assert result["mcp_server"] == "healthy"
@@ -27,14 +32,16 @@ class TestHealthCheckTool:
 
     def test_health_check_access_denied(self, restricted_controller: Any) -> None:
         """Test health check with read-only access."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = restricted_controller
 
             from zammad_mcp_server.server import health_check
+
             # health_check should work with read-only access
             result = health_check()
             assert result["mcp_server"] == "healthy"
@@ -45,9 +52,10 @@ class TestTicketTools:
 
     def test_get_ticket_success(self, unrestricted_controller: Any) -> None:
         """Test getting a ticket successfully."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_ticket = MagicMock()
             mock_ticket.model_dump.return_value = {
@@ -60,6 +68,7 @@ class TestTicketTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_ticket
+
             result = get_ticket(1)
 
             assert result["id"] == 1
@@ -67,16 +76,19 @@ class TestTicketTools:
 
     def test_get_ticket_not_found(self, unrestricted_controller: Any) -> None:
         """Test getting a non-existent ticket."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             from zammad_mcp_server.client import NotFoundError
+
             mock_client.get_ticket.side_effect = NotFoundError("Not found", 404)
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_ticket
+
             result = get_ticket(999)
 
             assert "error" in result
@@ -84,9 +96,10 @@ class TestTicketTools:
 
     def test_get_ticket_access_denied(self, restricted_controller: Any) -> None:
         """Test getting a ticket with restricted access."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_ticket = MagicMock()
             mock_ticket.model_dump.return_value = {
@@ -99,6 +112,7 @@ class TestTicketTools:
             mock_get_controller.return_value = restricted_controller
 
             from zammad_mcp_server.server import get_ticket
+
             result = get_ticket(1)
 
             assert "error" in result
@@ -106,9 +120,10 @@ class TestTicketTools:
 
     def test_search_tickets(self, unrestricted_controller: Any) -> None:
         """Test searching tickets."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_result = MagicMock()
             mock_result.items = [
@@ -121,6 +136,7 @@ class TestTicketTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import search_tickets
+
             result = search_tickets(query="test")
 
             assert len(result["tickets"]) == 2
@@ -128,9 +144,10 @@ class TestTicketTools:
 
     def test_create_ticket(self, unrestricted_controller: Any) -> None:
         """Test creating a ticket."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_ticket = MagicMock()
             mock_ticket.model_dump.return_value = {
@@ -143,6 +160,7 @@ class TestTicketTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import create_ticket
+
             result = create_ticket(
                 title="New Ticket",
                 group="Support",
@@ -154,76 +172,93 @@ class TestTicketTools:
 
     def test_create_ticket_access_denied(self, read_only_controller: Any) -> None:
         """Test creating a ticket with read-only access."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_get_client.return_value = MagicMock()
             mock_get_controller.return_value = read_only_controller
 
             from zammad_mcp_server.server import create_ticket
+
             with pytest.raises(PermissionError):
                 create_ticket(title="New", group="Support")
 
     def test_update_ticket(self, unrestricted_controller: Any) -> None:
         """Test updating a ticket."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_ticket = MagicMock()
             mock_ticket.model_dump.return_value = {
                 "id": 1,
                 "title": "Updated Title",
+                "group": "Support",
             }
+            mock_ticket.get_group_name.return_value = "Support"
+            mock_client.get_ticket.return_value = mock_ticket
             mock_client.update_ticket.return_value = mock_ticket
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import update_ticket
+
             result = update_ticket(ticket_id=1, title="Updated Title")
 
             assert result["title"] == "Updated Title"
 
     def test_delete_ticket(self, unrestricted_controller: Any) -> None:
         """Test deleting a ticket."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_client.delete_ticket.return_value = True
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import delete_ticket
+
             result = delete_ticket(1)
 
             assert result["success"] is True
 
     def test_delete_ticket_access_denied(self, restricted_controller: Any) -> None:
         """Test deleting a ticket with restricted access."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_get_client.return_value = MagicMock()
             mock_get_controller.return_value = restricted_controller
 
             from zammad_mcp_server.server import delete_ticket
+
             with pytest.raises(PermissionError):
                 delete_ticket(1)
 
     def test_get_ticket_articles(self, unrestricted_controller: Any) -> None:
         """Test getting ticket articles."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_article = MagicMock()
             mock_article.model_dump.return_value = {"id": 1, "body": "Test"}
+            mock_ticket = MagicMock()
+            mock_ticket.model_dump.return_value = {"id": 1, "group": "Support"}
+            mock_ticket.get_group_name.return_value = "Support"
+            mock_client.get_ticket.return_value = mock_ticket
             mock_client.get_ticket_articles.return_value = [mock_article]
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_ticket_articles
+
             result = get_ticket_articles(1)
 
             assert result["ticket_id"] == 1
@@ -231,26 +266,33 @@ class TestTicketTools:
 
     def test_create_article(self, unrestricted_controller: Any) -> None:
         """Test creating an article."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_article = MagicMock()
             mock_article.model_dump.return_value = {"id": 1, "body": "New content"}
+            mock_ticket = MagicMock()
+            mock_ticket.model_dump.return_value = {"id": 1, "group": "Support"}
+            mock_ticket.get_group_name.return_value = "Support"
+            mock_client.get_ticket.return_value = mock_ticket
             mock_client.create_article.return_value = mock_article
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import create_article
+
             result = create_article(ticket_id=1, body="New content")
 
             assert result["body"] == "New content"
 
     def test_get_ticket_stats(self, unrestricted_controller: Any) -> None:
         """Test getting ticket statistics."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_stats = MagicMock()
             mock_stats.model_dump.return_value = {
@@ -263,6 +305,7 @@ class TestTicketTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_ticket_stats
+
             result = get_ticket_stats()
 
             assert result["total"] == 100
@@ -270,9 +313,10 @@ class TestTicketTools:
 
     def test_get_ticket_states(self, unrestricted_controller: Any) -> None:
         """Test getting ticket states."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_client.get_ticket_states.return_value = [
                 {"id": 1, "name": "new"},
@@ -282,6 +326,7 @@ class TestTicketTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_ticket_states
+
             result = get_ticket_states()
 
             assert len(result) == 2
@@ -292,9 +337,10 @@ class TestUserTools:
 
     def test_get_user(self, unrestricted_controller: Any) -> None:
         """Test getting a user."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_user = MagicMock()
             mock_user.model_dump.return_value = {"id": 1, "email": "test@example.com"}
@@ -303,15 +349,17 @@ class TestUserTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_user
+
             result = get_user(1)
 
             assert result["id"] == 1
 
     def test_search_users(self, unrestricted_controller: Any) -> None:
         """Test searching users."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_result = MagicMock()
             mock_result.items = [
@@ -323,15 +371,17 @@ class TestUserTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import search_users
+
             result = search_users(query="test")
 
             assert len(result["users"]) == 1
 
     def test_create_user(self, unrestricted_controller: Any) -> None:
         """Test creating a user."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_user = MagicMock()
             mock_user.model_dump.return_value = {"id": 1, "email": "new@example.com"}
@@ -340,15 +390,17 @@ class TestUserTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import create_user
+
             result = create_user(email="new@example.com", firstname="New", lastname="User")
 
             assert result["email"] == "new@example.com"
 
     def test_update_user(self, unrestricted_controller: Any) -> None:
         """Test updating a user."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_user = MagicMock()
             mock_user.model_dump.return_value = {"id": 1, "firstname": "Updated"}
@@ -357,30 +409,34 @@ class TestUserTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import update_user
+
             result = update_user(user_id=1, firstname="Updated")
 
             assert result["firstname"] == "Updated"
 
     def test_delete_user(self, unrestricted_controller: Any) -> None:
         """Test deleting a user."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_client.delete_user.return_value = True
             mock_get_client.return_value = mock_client
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import delete_user
+
             result = delete_user(1)
 
             assert result["success"] is True
 
     def test_get_current_user(self, unrestricted_controller: Any) -> None:
         """Test getting current user."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_user = MagicMock()
             mock_user.model_dump.return_value = {"id": 1, "email": "me@example.com"}
@@ -389,6 +445,7 @@ class TestUserTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_current_user
+
             result = get_current_user()
 
             assert result["email"] == "me@example.com"
@@ -399,9 +456,10 @@ class TestOrganizationTools:
 
     def test_get_organization(self, unrestricted_controller: Any) -> None:
         """Test getting an organization."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_org = MagicMock()
             mock_org.model_dump.return_value = {"id": 1, "name": "Test Org"}
@@ -410,15 +468,17 @@ class TestOrganizationTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_organization
+
             result = get_organization(1)
 
             assert result["name"] == "Test Org"
 
     def test_search_organizations(self, unrestricted_controller: Any) -> None:
         """Test searching organizations."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_result = MagicMock()
             mock_result.items = [
@@ -430,15 +490,17 @@ class TestOrganizationTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import search_organizations
+
             result = search_organizations(query="test")
 
             assert len(result["organizations"]) == 1
 
     def test_create_organization(self, unrestricted_controller: Any) -> None:
         """Test creating an organization."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_org = MagicMock()
             mock_org.model_dump.return_value = {"id": 1, "name": "New Org"}
@@ -447,6 +509,7 @@ class TestOrganizationTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import create_organization
+
             result = create_organization(name="New Org")
 
             assert result["name"] == "New Org"
@@ -457,9 +520,10 @@ class TestGroupTools:
 
     def test_get_group(self, unrestricted_controller: Any) -> None:
         """Test getting a group."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_group = MagicMock()
             mock_group.model_dump.return_value = {"id": 1, "name": "Support"}
@@ -468,15 +532,17 @@ class TestGroupTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_group
+
             result = get_group(1)
 
             assert result["name"] == "Support"
 
     def test_list_groups(self, unrestricted_controller: Any) -> None:
         """Test listing groups."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_group = MagicMock()
             mock_group.model_dump.return_value = {"id": 1, "name": "Support"}
@@ -485,6 +551,7 @@ class TestGroupTools:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import list_groups
+
             result = list_groups()
 
             assert len(result["groups"]) == 1
@@ -500,6 +567,7 @@ class TestToolInfo:
             mock_get_controller.return_value = unrestricted_controller
 
             from zammad_mcp_server.server import get_allowed_tools
+
             result = get_allowed_tools()
 
             assert isinstance(result, list)
@@ -511,45 +579,52 @@ class TestAccessControlIntegration:
 
     def test_read_only_cannot_create_ticket(self, read_only_controller: Any) -> None:
         """Test that read-only policy prevents ticket creation."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_get_client.return_value = MagicMock()
             mock_get_controller.return_value = read_only_controller
 
             from zammad_mcp_server.server import create_ticket
+
             with pytest.raises(PermissionError):
                 create_ticket(title="Test", group="Support")
 
     def test_read_only_cannot_update_ticket(self, read_only_controller: Any) -> None:
         """Test that read-only policy prevents ticket updates."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_get_client.return_value = MagicMock()
             mock_get_controller.return_value = read_only_controller
 
             from zammad_mcp_server.server import update_ticket
+
             with pytest.raises(PermissionError):
                 update_ticket(ticket_id=1, title="New Title")
 
     def test_read_only_cannot_create_article(self, read_only_controller: Any) -> None:
         """Test that read-only policy prevents article creation."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_get_client.return_value = MagicMock()
             mock_get_controller.return_value = read_only_controller
 
             from zammad_mcp_server.server import create_article
+
             with pytest.raises(PermissionError):
                 create_article(ticket_id=1, body="New content")
 
     def test_read_only_can_search(self, read_only_controller: Any) -> None:
         """Test that read-only policy allows searching."""
-        with patch("zammad_mcp_server.server.get_client") as mock_get_client, \
-             patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller:
-
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
             mock_client = MagicMock()
             mock_result = MagicMock()
             mock_result.items = []
@@ -559,6 +634,42 @@ class TestAccessControlIntegration:
             mock_get_controller.return_value = read_only_controller
 
             from zammad_mcp_server.server import search_tickets
+
             result = search_tickets()
 
             assert "tickets" in result
+
+
+class TestSummarizeTicket:
+    def test_summarize_ticket_plain_thread(self, unrestricted_controller: Any) -> None:
+        with (
+            patch("zammad_mcp_server.server.get_client") as mock_get_client,
+            patch("zammad_mcp_server.server.get_access_controller") as mock_get_controller,
+        ):
+            article = MagicMock()
+            article.body = "<p>Need help</p>"
+            article.sender = "Customer"
+            article.type = "email"
+            article.internal = False
+            article.created_at = None
+            article.updated_at = None
+            article.id = 1
+
+            ticket = MagicMock()
+            ticket.model_dump.return_value = {"id": 4, "title": "Help", "group": "Support"}
+            ticket.get_group_name.return_value = "Support"
+            ticket.articles = [article]
+
+            mock_client = MagicMock()
+            mock_client.get_ticket.return_value = ticket
+            mock_client.list_ticket_tags.return_value = ["bug"]
+            mock_get_client.return_value = mock_client
+            mock_get_controller.return_value = unrestricted_controller
+
+            from zammad_mcp_server.server import summarize_ticket
+
+            result = summarize_ticket(4)
+
+            assert result["tags"] == ["bug"]
+            assert "Need help" in result["thread_plain"]
+            assert result["last_customer_message"] == "Need help"

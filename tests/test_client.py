@@ -1,7 +1,6 @@
 """Tests for Zammad MCP Server client."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
@@ -9,16 +8,16 @@ import respx
 from httpx import Response
 
 from zammad_mcp_server.client import (
-    ZammadClient,
-    ZammadClientError,
     AuthenticationError,
     NotFoundError,
+    ZammadClient,
+    ZammadClientError,
 )
 from zammad_mcp_server.models import (
+    ArticleCreateRequest,
+    OrganizationCreateRequest,
     TicketCreateRequest,
     UserCreateRequest,
-    OrganizationCreateRequest,
-    ArticleCreateRequest,
 )
 
 
@@ -58,16 +57,19 @@ class TestZammadClientInitialization:
         )
         assert client._get_auth_method() == "http_token"
 
-    def test_auth_method_oauth2(self) -> None:
+    def test_auth_method_oauth2(self, monkeypatch: Any) -> None:
         """Test OAuth2 authentication method detection."""
+        monkeypatch.delenv("ZAMMAD_HTTP_TOKEN", raising=False)
         client = ZammadClient(
             url="http://test.local",
             oauth2_token="oauth123",
         )
         assert client._get_auth_method() == "oauth2"
 
-    def test_auth_method_basic(self) -> None:
+    def test_auth_method_basic(self, monkeypatch: Any) -> None:
         """Test basic authentication method detection."""
+        monkeypatch.delenv("ZAMMAD_HTTP_TOKEN", raising=False)
+        monkeypatch.delenv("ZAMMAD_OAUTH2_TOKEN", raising=False)
         client = ZammadClient(
             url="http://test.local",
             username="user",
@@ -108,19 +110,25 @@ class TestZammadClientRequests:
     def test_get_ticket_with_articles(self, respx_mock: respx.MockRouter) -> None:
         """Test getting a ticket with articles."""
         respx_mock.get("http://test-zammad.local/api/v1/tickets/1").mock(
-            return_value=Response(200, json={
-                "id": 1,
-                "title": "Test",
-                "articleCount": 2,
-            })
+            return_value=Response(
+                200,
+                json={
+                    "id": 1,
+                    "title": "Test",
+                    "articleCount": 2,
+                },
+            )
         )
         respx_mock.get("http://test-zammad.local/api/v1/ticket_articles/by_ticket/1").mock(
-            return_value=Response(200, json={
-                "ticket_articles": [
-                    {"id": 1, "ticketId": 1, "body": "Article 1"},
-                    {"id": 2, "ticketId": 1, "body": "Article 2"},
-                ]
-            })
+            return_value=Response(
+                200,
+                json={
+                    "ticket_articles": [
+                        {"id": 1, "ticketId": 1, "body": "Article 1"},
+                        {"id": 2, "ticketId": 1, "body": "Article 2"},
+                    ]
+                },
+            )
         )
 
         client = ZammadClient()
@@ -156,6 +164,7 @@ class TestZammadClientRequests:
         client = ZammadClient()
 
         from zammad_mcp_server.models import TicketUpdateRequest
+
         request = TicketUpdateRequest(title="Updated Title")
 
         ticket = client.update_ticket(1, request)
@@ -250,6 +259,21 @@ class TestZammadClientRequests:
 
         assert len(groups) > 0
 
+    def test_get_ticket_stats(self, zammad_api_mock: Any) -> None:
+        client = ZammadClient()
+        stats = client.get_ticket_stats(max_scan_pages=1)
+        assert stats.total >= 0
+
+    def test_update_and_delete_user_org(self, zammad_api_mock: Any) -> None:
+        client = ZammadClient()
+        user = client.update_user(1, firstname="Ann")
+        assert user.id == 1
+        assert client.delete_user(1) is True
+        org = client.update_organization(1, note="n")
+        assert org.id == 1
+        assert client.delete_organization(1) is True
+        assert client.delete_ticket(1) is True
+
     def test_get_ticket_states(self, zammad_api_mock: Any) -> None:
         """Test getting ticket states."""
         client = ZammadClient()
@@ -289,13 +313,13 @@ class TestZammadClientErrors:
 
     def test_authentication_error(self, respx_mock: respx.MockRouter) -> None:
         """Test handling of 401 authentication error."""
-        respx_mock.get("http://test-zammad.local/api/v1/ping").mock(
+        respx_mock.get("http://test-zammad.local/api/v1/tickets/1").mock(
             return_value=Response(401, json={"error": "Unauthorized"})
         )
 
         client = ZammadClient()
         with pytest.raises(AuthenticationError):
-            client.health_check()
+            client.get_ticket(1)
 
     def test_not_found_error(self, respx_mock: respx.MockRouter) -> None:
         """Test handling of 404 not found error."""
@@ -309,13 +333,13 @@ class TestZammadClientErrors:
 
     def test_server_error(self, respx_mock: respx.MockRouter) -> None:
         """Test handling of 500 server error."""
-        respx_mock.get("http://test-zammad.local/api/v1/ping").mock(
+        respx_mock.get("http://test-zammad.local/api/v1/tickets/1").mock(
             return_value=Response(500, text="Internal Server Error")
         )
 
         client = ZammadClient()
         with pytest.raises(ZammadClientError):
-            client.health_check()
+            client.get_ticket(1)
 
     def test_network_error(self, respx_mock: respx.MockRouter) -> None:
         """Test handling of network errors."""

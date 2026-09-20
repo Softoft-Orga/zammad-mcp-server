@@ -1,7 +1,5 @@
 """Tests for Zammad MCP Server models."""
 
-from datetime import datetime
-
 import pytest
 from pydantic import ValidationError
 
@@ -10,6 +8,7 @@ from zammad_mcp_server.models import (
     ArticleCreateRequest,
     ArticleType,
     Group,
+    GroupBrief,
     Organization,
     OrganizationCreateRequest,
     PriorityBrief,

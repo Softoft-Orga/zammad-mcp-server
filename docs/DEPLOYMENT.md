@@ -72,8 +72,11 @@ pip install -e ".[dev]"
 # Run with stdio (for Claude Desktop)
 zammad-mcp-server
 
-# Run with SSE transport (for web clients)
-zammad-mcp-server --transport sse --port 8000
+# Streamable HTTP (Docker / remote clients)
+zammad-mcp-server --transport http --host 0.0.0.0 --port 8000
+
+# Legacy SSE
+zammad-mcp-server --transport sse --host 0.0.0.0 --port 8000
 ```
 
 ### Claude Desktop Configuration
@@ -131,7 +134,7 @@ ENV MCP_SERVER_PORT=8000
 
 EXPOSE 8000
 
-CMD ["zammad-mcp-server", "--transport", "sse"]
+CMD ["zammad-mcp-server", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 Build and run:
@@ -608,37 +611,7 @@ aws logs tail /aws/lambda/zammad-mcp-server
 railway logs --tail
 ```
 
-## Health Checks
-
-All deployment methods should include health checks:
-
-```python
-# The server automatically responds to health checks
-GET /health -> {"status": "healthy", "zammad_connection": {...}}
-```
-
-### Cloud Run Health Check
-
-```yaml
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8000
-  initialDelaySeconds: 30
-  periodSeconds: 30
-```
-
-### Fly.io Health Check
-
-```toml
-[[services.http_checks]]
-  interval = "30s"
-  timeout = "5s"
-  grace_period = "30s"
-  method = "GET"
-  path = "/health"
-  protocol = "http"
-```
+The published image listens on **Streamable HTTP** (`/mcp/` on port 8000). There is no `/health` HTTP route — probes should check that TCP port 8000 is open (the image `HEALTHCHECK` does a TCP connect).
 
 ## Troubleshooting
 

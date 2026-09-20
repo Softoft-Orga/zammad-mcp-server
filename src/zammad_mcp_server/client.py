@@ -74,7 +74,9 @@ class ZammadClient:
             cache_ttl: Cache time-to-live in seconds
             max_cache_size: Maximum cache entries
         """
-        self.url = (url or os.getenv("ZAMMAD_URL", "")).rstrip("/")
+        env_url = os.getenv("ZAMMAD_URL")
+        resolved_url = url if url is not None else env_url
+        self.url = (resolved_url or "").rstrip("/")
         self.http_token = http_token or os.getenv("ZAMMAD_HTTP_TOKEN")
         self.oauth2_token = oauth2_token or os.getenv("ZAMMAD_OAUTH2_TOKEN")
         self.username = username or os.getenv("ZAMMAD_USERNAME")
@@ -82,9 +84,13 @@ class ZammadClient:
         self.timeout = timeout
 
         # Caches for static data
-        self._groups_cache: TTLCache = TTLCache(maxsize=max_cache_size, ttl=cache_ttl)
-        self._states_cache: TTLCache = TTLCache(maxsize=100, ttl=cache_ttl)
-        self._priorities_cache: TTLCache = TTLCache(maxsize=100, ttl=cache_ttl)
+        self._groups_cache: TTLCache[int, Group] = TTLCache(maxsize=max_cache_size, ttl=cache_ttl)
+        self._states_cache: TTLCache[str, list[dict[str, Any]]] = TTLCache(
+            maxsize=100, ttl=cache_ttl
+        )
+        self._priorities_cache: TTLCache[str, list[dict[str, Any]]] = TTLCache(
+            maxsize=100, ttl=cache_ttl
+        )
 
         if not self.url:
             raise ValueError("Zammad URL is required")
@@ -148,21 +154,47 @@ class ZammadClient:
             response = self._client.request(method, url, **kwargs)
             response.raise_for_status()
 
-            if response.status_code == 204:
+            if response.status_code == 204 or not response.content:
                 return {}
 
-            return response.json()
+            payload = response.json()
+            if isinstance(payload, dict):
+                return payload
+            if isinstance(payload, list):
+                return payload
+            return {"result": payload}
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
-                raise AuthenticationError("Authentication failed", 401)
+                raise AuthenticationError("Authentication failed", 401) from e
             if e.response.status_code == 404:
-                raise NotFoundError(f"Resource not found: {path}", 404)
+                raise NotFoundError(f"Resource not found: {path}", 404) from e
             raise ZammadClientError(
                 f"HTTP error {e.response.status_code}: {e.response.text}",
                 e.response.status_code,
-            )
+            ) from e
         except httpx.RequestError as e:
-            raise ZammadClientError(f"Request failed: {e}")
+            raise ZammadClientError(f"Request failed: {e}") from e
+
+    def _request_bytes(self, method: str, path: str, **kwargs: Any) -> bytes:
+        """Make an HTTP request and return raw bytes (attachments)."""
+        if not self._client:
+            raise RuntimeError("Client not initialized")
+        url = f"/api/v1{path}"
+        try:
+            response = self._client.request(method, url, **kwargs)
+            response.raise_for_status()
+            return response.content
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError("Authentication failed", 401) from e
+            if e.response.status_code == 404:
+                raise NotFoundError(f"Resource not found: {path}", 404) from e
+            raise ZammadClientError(
+                f"HTTP error {e.response.status_code}: {e.response.text}",
+                e.response.status_code,
+            ) from e
+        except httpx.RequestError as e:
+            raise ZammadClientError(f"Request failed: {e}") from e
 
     def health_check(self) -> dict[str, Any]:
         """Check if the Zammad server is accessible."""
@@ -277,6 +309,8 @@ class ZammadClient:
                 "type": request.article_type.value,
                 "internal": request.article_internal,
             }
+            if request.attachments:
+                data["article"]["attachments"] = [item.to_zammad() for item in request.attachments]
 
         result = self._request("POST", "/tickets", json=data)
         return Ticket.model_validate(result)
@@ -336,6 +370,8 @@ class ZammadClient:
             data["to"] = request.to
         if request.cc:
             data["cc"] = request.cc
+        if request.attachments:
+            data["attachments"] = [item.to_zammad() for item in request.attachments]
 
         result = self._request("POST", "/ticket_articles", json=data)
         return Article.model_validate(result)
@@ -638,32 +674,120 @@ class ZammadClient:
     def get_ticket_states(self) -> list[dict[str, Any]]:
         """Get all available ticket states."""
         if "states" in self._states_cache:
-            return self._states_cache["states"]  # type: ignore
+            return self._states_cache["states"]
 
         result = self._request("GET", "/ticket_states", params={"expand": "true"})
 
         if isinstance(result, dict):
-            states = result.get("ticket_states", [])
+            states = [item for item in result.get("ticket_states", []) if isinstance(item, dict)]
+        elif isinstance(result, list):
+            states = [item for item in result if isinstance(item, dict)]
         else:
-            states = result
+            states = []
 
-        self._states_cache["states"] = states  # type: ignore
-        return states  # type: ignore
+        self._states_cache["states"] = states
+        return states
 
     def get_priorities(self) -> list[dict[str, Any]]:
         """Get all available priorities."""
         if "priorities" in self._priorities_cache:
-            return self._priorities_cache["priorities"]  # type: ignore
+            return self._priorities_cache["priorities"]
 
         result = self._request("GET", "/ticket_priorities", params={"expand": "true"})
 
         if isinstance(result, dict):
-            priorities = result.get("ticket_priorities", [])
+            priorities = [
+                item for item in result.get("ticket_priorities", []) if isinstance(item, dict)
+            ]
+        elif isinstance(result, list):
+            priorities = [item for item in result if isinstance(item, dict)]
         else:
-            priorities = result
+            priorities = []
 
-        self._priorities_cache["priorities"] = priorities  # type: ignore
-        return priorities  # type: ignore
+        self._priorities_cache["priorities"] = priorities
+        return priorities
+
+    def list_ticket_tags(self, ticket_id: int) -> list[str]:
+        """List tags attached to a ticket."""
+        result = self._request(
+            "GET",
+            "/tags",
+            params={"object": "Ticket", "o_id": ticket_id},
+        )
+        if isinstance(result, dict):
+            tags = result.get("tags", [])
+            return [str(tag) for tag in tags]
+        return [str(tag) for tag in result]
+
+    def add_ticket_tag(self, ticket_id: int, tag: str) -> bool:
+        """Add a tag to a ticket."""
+        self._request(
+            "POST",
+            "/tags/add",
+            json={"item": tag, "object": "Ticket", "o_id": ticket_id},
+        )
+        return True
+
+    def remove_ticket_tag(self, ticket_id: int, tag: str) -> bool:
+        """Remove a tag from a ticket."""
+        self._request(
+            "DELETE",
+            "/tags/remove",
+            json={"item": tag, "object": "Ticket", "o_id": ticket_id},
+        )
+        return True
+
+    def list_tags(self) -> list[dict[str, Any]]:
+        """List the admin tag catalog."""
+        result = self._request("GET", "/tag_list")
+        if isinstance(result, list):
+            return result
+        return []
+
+    def get_article_attachment(
+        self,
+        ticket_id: int,
+        article_id: int,
+        attachment_id: int,
+    ) -> bytes:
+        """Download a ticket article attachment."""
+        return self._request_bytes(
+            "GET",
+            f"/ticket_attachment/{ticket_id}/{article_id}/{attachment_id}",
+        )
+
+    def link_tickets(
+        self,
+        source_id: int,
+        target_id: int,
+        link_type: str = "normal",
+    ) -> dict[str, Any]:
+        """Create a link between two tickets."""
+        result = self._request(
+            "POST",
+            "/links/add",
+            json={
+                "link_object_source": "Ticket",
+                "link_object_source_value": source_id,
+                "link_object_target": "Ticket",
+                "link_object_target_value": target_id,
+                "link_type": link_type,
+            },
+        )
+        if isinstance(result, dict):
+            return result
+        return {"result": result}
+
+    def merge_tickets(self, source_id: int, target_id: int) -> dict[str, Any]:
+        """Merge source ticket into target ticket."""
+        result = self._request(
+            "POST",
+            "/ticket_merge",
+            json={"src_ticket_id": source_id, "dst_ticket_id": target_id},
+        )
+        if isinstance(result, dict):
+            return result
+        return {"result": result}
 
     def clear_caches(self) -> None:
         """Clear all caches."""

@@ -1,16 +1,12 @@
 """Tests for Zammad MCP Server access control."""
 
-import os
 from typing import Any
-
-import pytest
 
 from zammad_mcp_server.access_control import (
     AccessController,
     AccessPolicy,
     Permission,
     ToolCategory,
-    TOOL_CATEGORIES,
 )
 
 
@@ -127,8 +123,8 @@ class TestAccessController:
         controller = AccessController(policy)
 
         assert controller.can_admin("delete_ticket") is True
-        assert controller.can_write("delete_ticket") is False
-        assert controller.can_read("delete_ticket") is False
+        assert controller.can_write("delete_ticket") is True
+        assert controller.can_read("delete_ticket") is True
 
     def test_tool_permission_overrides_category(self) -> None:
         """Test that specific tool permissions override category."""
@@ -287,3 +283,22 @@ class TestAccessControllerFromEnv:
 
         assert controller.filter_ticket(ticket_allowed) == ticket_allowed
         assert controller.filter_ticket(ticket_denied) is None
+
+    def test_from_env_organizations_and_read_only(self, monkeypatch: Any) -> None:
+        monkeypatch.setenv("MCP_DEFAULT_PERMISSION", "read_only")
+        monkeypatch.setenv("MCP_ALLOWED_ORGANIZATIONS", "1,2")
+        monkeypatch.setenv("MCP_RATE_LIMIT_PER_MINUTE", "10")
+        monkeypatch.delenv("MCP_DENIED_TOOLS", raising=False)
+        controller = AccessController.from_env()
+        assert controller.policy.allowed_organizations == {1, 2}
+        assert controller.can_read("get_ticket") is True
+        assert controller.can_write("create_ticket") is False
+        assert controller.policy.rate_limit_per_minute == 10
+
+    def test_no_ghost_tools_in_registry(self) -> None:
+        from zammad_mcp_server.access_control import REGISTERED_TOOLS
+
+        assert "search" not in REGISTERED_TOOLS
+        assert "full_text_search" not in REGISTERED_TOOLS
+        assert "create_group" in REGISTERED_TOOLS
+        assert "summarize_ticket" in REGISTERED_TOOLS

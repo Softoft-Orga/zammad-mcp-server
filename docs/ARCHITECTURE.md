@@ -547,4 +547,6 @@ Enable extensions for:
 
 ---
 
+Per-user Zammad permissions via `X-On-Behalf-Of` are **out of scope for 0.2.0** (planned for 0.3.0 / Zammad Commander).
+
 *This architecture is designed to be extensible while maintaining simplicity for the common use case.*

@@ -154,8 +154,11 @@ MCP_DENIED_TOOLS=delete_ticket,delete_user
 # Run with stdio transport (for Claude Desktop)
 zammad-mcp-server
 
-# Run with SSE transport (for remote clients)
-zammad-mcp-server --transport sse --port 8000
+# Run with Streamable HTTP (Docker / remote clients; recommended)
+zammad-mcp-server --transport http --host 0.0.0.0 --port 8000
+
+# Legacy SSE transport (older MCP clients)
+zammad-mcp-server --transport sse --host 0.0.0.0 --port 8000
 ```
 
 ### Claude Desktop / Cursor
@@ -214,7 +217,7 @@ pytest tests/test_models.py -v
 
 ## Available MCP tools
 
-The server provides 30+ MCP tools for Zammad, organized into categories. Full reference: [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/)
+The server provides 35 typed MCP tools for Zammad. Full reference: [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/)
 
 ### Tickets
 - `get_ticket` - Get ticket details
@@ -227,6 +230,10 @@ The server provides 30+ MCP tools for Zammad, organized into categories. Full re
 - `get_ticket_stats` - Analytics and metrics
 - `get_ticket_states` - List available states
 - `get_priorities` - List priority levels
+- `list_ticket_tags` / `add_ticket_tag` / `remove_ticket_tag` - Ticket tags
+- `get_article_attachment` - Download an article file
+- `link_tickets` / `merge_tickets` - Relate or merge tickets
+- `summarize_ticket` - Plain-text thread + tags for agents
 
 ### Users
 - `get_user` - Get user details
@@ -246,6 +253,10 @@ The server provides 30+ MCP tools for Zammad, organized into categories. Full re
 ### Groups
 - `get_group` - Get group details
 - `list_groups` - List all groups
+- `create_group` - Create a group
+
+### Tags (admin catalog)
+- `list_tags` - Global tag list
 
 ### System
 - `health_check` - Check server health
@@ -275,8 +286,17 @@ MCP_ALLOWED_CATEGORIES=tickets,groups,system
 # Deny specific dangerous tools
 MCP_DENIED_TOOLS=delete_ticket,delete_user,delete_organization
 
-# Restrict to specific groups
+# Restrict to specific groups (reads and writes)
 MCP_ALLOWED_GROUPS=Support,Sales
+
+# Restrict to organization IDs
+MCP_ALLOWED_ORGANIZATIONS=1,2
+
+# Read-only preset (no creates/updates/deletes)
+MCP_DEFAULT_PERMISSION=read_only
+
+# Rate limit (0 disables)
+MCP_RATE_LIMIT_PER_MINUTE=60
 ```
 
 ### Programmatic Access Control
@@ -359,6 +379,8 @@ The server exposes several MCP resources:
 - `zammad://ticket/{id}` - Formatted ticket with articles
 - `zammad://user/{id}` - User details
 - `zammad://config/states` - Available ticket states
+- `zammad://config/priorities` - Available priorities
+- `zammad://organization/{id}` - Organization snapshot
 
 ## Prompts
 
@@ -367,6 +389,10 @@ Built-in prompts for common workflows:
 - `ticket_summary_prompt` - Generate ticket summaries
 - `customer_communication_prompt` - Draft customer responses
 - `escalation_analysis_prompt` - Analyze escalation needs
+- `analyze_ticket` - Structured analysis with tags and SLA hints
+- `draft_response` - Locale-aware customer or internal reply
+- `triage_queue` - Prioritize open tickets in a group
+- `escalation_summary` - Overdue / pending-close briefing
 
 ## Hosting options
 
@@ -389,6 +415,10 @@ docker run -p 8000:8000 \
   -e ZAMMAD_URL=https://your-zammad.com \
   -e ZAMMAD_HTTP_TOKEN=your_token \
   ghcr.io/softoft-orga/zammad-mcp-server:latest
+
+# Override to legacy SSE if needed:
+# docker run ... ghcr.io/softoft-orga/zammad-mcp-server:latest \
+#   zammad-mcp-server --transport sse --host 0.0.0.0 --port 8000
 ```
 
 Build locally:

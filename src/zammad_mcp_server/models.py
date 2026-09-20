@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -50,7 +50,7 @@ class Visibility(str, Enum):
 class StateBrief(BaseModel):
     """Brief state information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -60,7 +60,7 @@ class StateBrief(BaseModel):
 class PriorityBrief(BaseModel):
     """Brief priority information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -69,7 +69,7 @@ class PriorityBrief(BaseModel):
 class GroupBrief(BaseModel):
     """Brief group information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -78,7 +78,7 @@ class GroupBrief(BaseModel):
 class UserBrief(BaseModel):
     """Brief user information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     firstname: str | None = None
@@ -90,16 +90,55 @@ class UserBrief(BaseModel):
 class OrganizationBrief(BaseModel):
     """Brief organization information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
 
 
+class AttachmentMeta(BaseModel):
+    """Metadata for an article attachment (download separately)."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    id: int | None = None
+    filename: str | None = None
+    size: int | None = None
+    preferences: dict[str, Any] | None = None
+
+
+class AttachmentUpload(BaseModel):
+    """Base64 attachment payload for Zammad article create."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    filename: str = Field(..., min_length=1)
+    data: str = Field(..., min_length=1)
+    mime_type: str = Field(..., alias="mime-type", min_length=1)
+
+    def to_zammad(self) -> dict[str, str]:
+        """Serialize using Zammad's hyphenated mime-type key."""
+        return {
+            "filename": self.filename,
+            "data": self.data,
+            "mime-type": self.mime_type,
+        }
+
+
+class TagListItem(BaseModel):
+    """Admin tag catalog entry."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    id: int | None = None
+    name: str
+    count: int | None = None
+
+
 class Article(BaseModel):
     """Zammad article (ticket message/comment)."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     ticket_id: int = Field(alias="ticketId")
@@ -111,6 +150,7 @@ class Article(BaseModel):
     to: str | None = None
     cc: str | None = None
     internal: bool = False
+    attachments: list[AttachmentMeta] | None = None
     created_at: datetime | None = Field(alias="createdAt", default=None)
     updated_at: datetime | None = Field(alias="updatedAt", default=None)
     created_by: UserBrief | str | None = Field(alias="createdBy", default=None)
@@ -128,7 +168,7 @@ class Article(BaseModel):
 class Ticket(BaseModel):
     """Zammad ticket model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     number: str | None = None
@@ -146,16 +186,15 @@ class Ticket(BaseModel):
     closed_at: datetime | None = Field(alias="closeAt", default=None)
     pending_time: datetime | None = Field(alias="pendingTime", default=None)
     first_response_at: datetime | None = Field(alias="firstResponseAt", default=None)
+    organization_id: int | None = Field(alias="organizationId", default=None)
 
     @field_validator("group", "owner", "customer", "state", "priority", mode="before")
     @classmethod
     def parse_expandable_field(cls, v: Any) -> Any:
         """Handle both object and string representations from API."""
         if isinstance(v, dict):
-            field_name = cls.model_fields.get("group")  # type: ignore
-            if "stateType" in v:
-                return StateBrief.model_validate(v)
-            elif "state_type" in v:
+            field_name = cls.model_fields.get("group")
+            if "stateType" in v or "state_type" in v:
                 return StateBrief.model_validate(v)
             elif field_name and field_name.alias == "group":
                 return GroupBrief.model_validate(v)
@@ -191,7 +230,7 @@ class Ticket(BaseModel):
 class User(BaseModel):
     """Zammad user model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     login: str | None = None
@@ -225,7 +264,7 @@ class User(BaseModel):
 class Organization(BaseModel):
     """Zammad organization model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -242,7 +281,7 @@ class Organization(BaseModel):
 class Group(BaseModel):
     """Zammad group model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: int
     name: str
@@ -256,7 +295,7 @@ class Group(BaseModel):
 class GroupCreateRequest(BaseModel):
     """Request model for creating a group."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     name: str = Field(..., min_length=1, max_length=500)
     active: bool = True
@@ -266,7 +305,7 @@ class GroupCreateRequest(BaseModel):
 class TicketStats(BaseModel):
     """Ticket statistics."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     total: int
     open: int
@@ -281,7 +320,7 @@ class TicketStats(BaseModel):
 class SearchResult(BaseModel):
     """Generic search result wrapper."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     items: list[Any]
     total_count: int
@@ -293,7 +332,7 @@ class SearchResult(BaseModel):
 class TicketCreateRequest(BaseModel):
     """Request model for creating a ticket."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     title: str = Field(..., min_length=1, max_length=500)
     group: str = Field(..., min_length=1)
@@ -304,12 +343,13 @@ class TicketCreateRequest(BaseModel):
     article_body: str | None = None
     article_type: ArticleType = ArticleType.NOTE
     article_internal: bool = False
+    attachments: list[AttachmentUpload] | None = None
 
 
 class TicketUpdateRequest(BaseModel):
     """Request model for updating a ticket."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     title: str | None = Field(None, max_length=500)
     group: str | None = None
@@ -322,7 +362,7 @@ class TicketUpdateRequest(BaseModel):
 class ArticleCreateRequest(BaseModel):
     """Request model for creating an article."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     ticket_id: int = Field(..., gt=0)
     subject: str | None = Field(None, max_length=500)
@@ -331,12 +371,13 @@ class ArticleCreateRequest(BaseModel):
     internal: bool = False
     to: str | None = None
     cc: str | None = None
+    attachments: list[AttachmentUpload] | None = None
 
 
 class UserCreateRequest(BaseModel):
     """Request model for creating a user."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     login: str | None = None
     firstname: str | None = None
@@ -352,7 +393,7 @@ class UserCreateRequest(BaseModel):
 class OrganizationCreateRequest(BaseModel):
     """Request model for creating an organization."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     name: str = Field(..., min_length=1, max_length=500)
     shared: bool = True
