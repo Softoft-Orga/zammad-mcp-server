@@ -167,8 +167,9 @@ class ZammadClient:
     def health_check(self) -> dict[str, Any]:
         """Check if the Zammad server is accessible."""
         try:
-            result = self._request("GET", "/ping")
-            return {"status": "healthy", "response": result}
+            # Zammad has no /ping endpoint; /users/me also verifies the credentials.
+            me: dict[str, Any] = self._request("GET", "/users/me")  # type: ignore
+            return {"status": "healthy", "response": {"id": me.get("id"), "login": me.get("login")}}
         except Exception as e:
             return {"status": "unhealthy", "error": str(e)}
 
