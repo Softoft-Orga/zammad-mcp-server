@@ -22,6 +22,7 @@
 - [Zammad compatibility](#zammad-compatibility)
 - [Documentation](#documentation)
 - [Quick start](#quick-start)
+- [Zammad Commander (browser chat UI)](#zammad-commander-browser-chat-ui)
 - [Available MCP tools](#available-mcp-tools)
 - [Access control & security](#access-control--security)
 - [Authentication methods](#authentication-methods)
@@ -63,13 +64,13 @@ Connecting a large language model to a real helpdesk usually means writing a bes
 The MCP server talks to Zammad through the **REST API**. No Zammad-side plugin is
 required. Full matrix: **[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)**.
 
-| Zammad version | Status |
-| --- | --- |
-| **7.1** | **Tested** (primary; default dev stack) |
-| **7.0** | **Tested** |
-| **6.5.x** | **Compatible** |
+| Zammad version  | Status                                  |
+| --------------- | --------------------------------------- |
+| **7.1**         | **Tested** (primary; default dev stack) |
+| **7.0**         | **Tested**                              |
+| **6.5.x**       | **Compatible**                          |
 | **6.0 – 6.4.x** | **Compatible** (minimum supported line) |
-| **&lt; 6.0** | Not supported |
+| **&lt; 6.0**    | Not supported                           |
 
 **MCP package vs Zammad:** `zammad-mcp-server` on PyPI is versioned independently
 (`0.1.x`). One MCP release works with every supported Zammad version — set
@@ -86,16 +87,17 @@ from 7.0 onward). The bundled dev stack uses PostgreSQL.
 
 Full guides, security checklists, and deployment notes live on the Open Ticket AI website:
 
-| Page | What you will learn |
-| --- | --- |
-| [Zammad MCP Server (overview)](https://openticketai.com/en/docs/zammad-mcp-server/) | Who it is for and how it fits the Zammad + AI landscape |
-| [Quick Start](https://openticketai.com/en/docs/zammad-mcp-server/quick-start/) | Install and run `health_check` in minutes |
-| [Claude & Cursor Setup](https://openticketai.com/en/docs/zammad-mcp-server/claude-cursor/) | MCP client configuration |
-| [Configuration](https://openticketai.com/en/docs/zammad-mcp-server/configuration/) | Environment variables and access policies |
-| [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/) | All MCP tools by category |
-| [Security](https://openticketai.com/en/docs/zammad-mcp-server/security/) | Tokens, least privilege, production checklist |
-| [Deployment](https://openticketai.com/en/docs/zammad-mcp-server/deployment/) | Docker, SSE, and production notes |
-| [Zammad compatibility (GitHub)](docs/COMPATIBILITY.md) | Supported Zammad versions and dev-stack tags |
+| Page                                                                                       | What you will learn                                     |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| [Zammad MCP Server (overview)](https://openticketai.com/en/docs/zammad-mcp-server/)        | Who it is for and how it fits the Zammad + AI landscape |
+| [Quick Start](https://openticketai.com/en/docs/zammad-mcp-server/quick-start/)             | Install and run `health_check` in minutes               |
+| [Claude & Cursor Setup](https://openticketai.com/en/docs/zammad-mcp-server/claude-cursor/) | MCP client configuration                                |
+| [Configuration](https://openticketai.com/en/docs/zammad-mcp-server/configuration/)         | Environment variables and access policies               |
+| [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/)               | All MCP tools by category                               |
+| [Security](https://openticketai.com/en/docs/zammad-mcp-server/security/)                   | Tokens, least privilege, production checklist           |
+| [Deployment](https://openticketai.com/en/docs/zammad-mcp-server/deployment/)               | Docker, SSE, and production notes                       |
+| [Zammad compatibility (GitHub)](docs/COMPATIBILITY.md)                                     | Supported Zammad versions and dev-stack tags            |
+| [Zammad Commander (GitHub)](docs/ZAMMAD_COMMANDER.md)                                      | LibreChat + MCP + your Zammad — internal admin chat     |
 
 **Tutorial:** [Zammad MCP Server — setup and usage (blog)](https://openticketai.com/en/docs/blog/zammad-mcp-server-setup-and-usage/)
 
@@ -105,9 +107,10 @@ Full guides, security checklists, and deployment notes live on the Open Ticket A
 
 - **[Zammad 7.1 native AI](https://openticketai.com/en/docs/blog/zammad-ai-zammad-7-ki-funktionen-leitfaden/)** — built-in summaries and writing assistant inside the Zammad UI.
 - **Zammad MCP Server (this project)** — connects **external** MCP clients (Claude Desktop, Cursor, custom agents) to Zammad.
+- **[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)** — **browser chat UI** (LibreChat + this MCP server + your Zammad). No Cursor required; `docker compose up` for internal admin chat. See [Zammad Commander (browser chat UI)](#zammad-commander-browser-chat-ui).
 - **[Open Ticket AI Runtime](https://openticketai.com/en/docs/otai-runtime/)** — on-prem inference with **custom-trained** models via the OTAI Zammad connector ([integration guide](https://openticketai.com/en/docs/blog/integrating-zammad-open-ticket-ai/)).
 
-All three can coexist. MCP is the fastest path to “talk to my helpdesk from Claude.” Need custom models on your queues? See [Open Ticket AI for Zammad](https://openticketai.com/en/solutions/zammad/).
+All three can coexist. MCP is the fastest path to “talk to my helpdesk from Claude.” Want a **team chat UI** instead of an IDE? Use **[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)**. Need custom models on your queues? See [Open Ticket AI for Zammad](https://openticketai.com/en/solutions/zammad/).
 
 ## Quick Start
 
@@ -183,7 +186,32 @@ Add to `claude_desktop_config.json` or Cursor **Settings → MCP**:
 }
 ```
 
-Restart the app after saving. Ask: *"Run health_check on Zammad"* or *"List open tickets."*
+Restart the app after saving. Ask: _"Run health_check on Zammad"_ or _"List open tickets."_
+
+## Zammad Commander (browser chat UI)
+
+Not every agent wants Cursor or Claude Desktop. **[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)**
+is the official companion project: Docker Compose bundles **LibreChat**, **this MCP server**
+(Streamable HTTP sidecar), and **your Zammad** so support leads get a browser chat for
+search, summaries, and reply drafts (human-in-the-loop — no auto-send, deletes denied by default).
+
+```bash
+git clone https://github.com/Softoft-Orga/zammad-commander.git
+cd zammad-commander
+cp env.example .env
+# Set ZAMMAD_URL, ZAMMAD_HTTP_TOKEN, and LibreChat secrets.
+
+docker compose up -d
+# On-prem LLM: add -f docker-compose.onprem.yml (see Commander README).
+```
+
+Open **http://localhost:3080**, pick **Zammad Commander**, and start chatting.
+
+| You need | Where |
+| --- | --- |
+| Full setup (OpenRouter vs Ollama, demo Zammad, hardware) | [Commander README](https://github.com/Softoft-Orga/zammad-commander) |
+| Step-by-step from the MCP side | [docs/ZAMMAD_COMMANDER.md](docs/ZAMMAD_COMMANDER.md) |
+| MCP env / deny lists Commander uses | [Configuration guide](https://openticketai.com/en/docs/zammad-mcp-server/configuration/) |
 
 ## Development Environment
 
@@ -220,6 +248,7 @@ pytest tests/test_models.py -v
 The server provides 35 typed MCP tools for Zammad. Full reference: [Tools Reference](https://openticketai.com/en/docs/zammad-mcp-server/tools/)
 
 ### Tickets
+
 - `get_ticket` - Get ticket details
 - `search_tickets` - Search with filters
 - `create_ticket` - Create new tickets
@@ -236,6 +265,7 @@ The server provides 35 typed MCP tools for Zammad. Full reference: [Tools Refere
 - `summarize_ticket` - Plain-text thread + tags for agents
 
 ### Users
+
 - `get_user` - Get user details
 - `search_users` - Find users
 - `create_user` - Add new users
@@ -244,6 +274,7 @@ The server provides 35 typed MCP tools for Zammad. Full reference: [Tools Refere
 - `get_current_user` - Get authenticated user
 
 ### Organizations
+
 - `get_organization` - Get organization details
 - `search_organizations` - Find organizations
 - `create_organization` - Add organizations
@@ -251,14 +282,17 @@ The server provides 35 typed MCP tools for Zammad. Full reference: [Tools Refere
 - `delete_organization` - Remove organizations (admin)
 
 ### Groups
+
 - `get_group` - Get group details
 - `list_groups` - List all groups
 - `create_group` - Create a group
 
 ### Tags (admin catalog)
+
 - `list_tags` - Global tag list
 
 ### System
+
 - `health_check` - Check server health
 - `get_server_info` - Get Zammad version/info
 - `get_allowed_tools` - List accessible tools
@@ -462,6 +496,13 @@ Zammad 7.1's native AI adds summaries and a writing assistant inside the Zammad 
 
 Yes — see [Hosting options](#hosting-options) and the [Deployment guide](https://openticketai.com/en/docs/zammad-mcp-server/deployment/) for Docker, SSE, and cloud hosting (Cloud Run, Railway, Fly.io).
 
+### What is Zammad Commander?
+
+**[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)** is a separate MIT
+project: LibreChat + this MCP server + your Zammad in one `docker compose up`. Use it when
+support leads need a **browser chat UI** instead of Claude Desktop or Cursor. Setup:
+[docs/ZAMMAD_COMMANDER.md](docs/ZAMMAD_COMMANDER.md).
+
 ## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -506,6 +547,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 
 ## Related Projects
 
+- **[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)** — LibreChat + this MCP server + your Zammad (MIT, Docker Compose)
 - [Zammad](https://github.com/zammad/zammad) - The ticket system itself
 - [zammad-py](https://github.com/joeirimpan/zammad-py) - Python client library
 

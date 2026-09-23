@@ -4,6 +4,7 @@ This guide covers various deployment options for the Zammad MCP Server, from loc
 
 ## Table of Contents
 
+- [Zammad Commander (browser UI)](#zammad-commander-browser-ui)
 - [Quick Start](#quick-start)
 - [Local Development](#local-development)
 - [Docker Deployment](#docker-deployment)
@@ -13,6 +14,15 @@ This guide covers various deployment options for the Zammad MCP Server, from loc
 - [Fly.io](#flyio)
 - [Environment Configuration](#environment-configuration)
 - [Security Considerations](#security-considerations)
+
+## Zammad Commander (browser UI)
+
+For a **team-facing browser chat** (LibreChat) wired to Zammad through Streamable HTTP,
+use **[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)** instead of
+hand-rolling LibreChat + MCP. It ships compose files, access-control presets, and
+OpenRouter or Ollama profiles.
+
+See **[docs/ZAMMAD_COMMANDER.md](ZAMMAD_COMMANDER.md)** for quick start and demo Zammad notes.
 
 ## Quick Start
 
@@ -84,16 +94,19 @@ zammad-mcp-server --transport sse --host 0.0.0.0 --port 8000
 Add to `claude_desktop_config.json`:
 
 **macOS:**
+
 ```bash
 ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```
 
 **Windows:**
+
 ```bash
 %APPDATA%\Claude\claude_desktop_config.json
 ```
 
 **Configuration:**
+
 ```json
 {
   "mcpServers": {
@@ -138,6 +151,7 @@ CMD ["zammad-mcp-server", "--transport", "http", "--host", "0.0.0.0", "--port", 
 ```
 
 Build and run:
+
 ```bash
 # Build
 docker build -t zammad-mcp-server .
@@ -153,7 +167,7 @@ docker run -p 8000:8000 \
 
 ```yaml
 # docker-compose.mcp.yml
-version: '3.8'
+version: "3.8"
 
 services:
   zammad-mcp:
@@ -173,6 +187,7 @@ services:
 ```
 
 Run:
+
 ```bash
 docker-compose -f docker-compose.mcp.yml up -d
 ```
@@ -366,6 +381,7 @@ custom:
 ```
 
 Deploy:
+
 ```bash
 npm install -g serverless
 serverless plugin install -n serverless-python-requirements
@@ -484,10 +500,10 @@ fly open
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `ZAMMAD_URL` | Zammad instance URL | `https://helpdesk.company.com` |
-| `ZAMMAD_HTTP_TOKEN` | API token for authentication | `abc123...` |
+| Variable            | Description                  | Example                        |
+| ------------------- | ---------------------------- | ------------------------------ |
+| `ZAMMAD_URL`        | Zammad instance URL          | `https://helpdesk.company.com` |
+| `ZAMMAD_HTTP_TOKEN` | API token for authentication | `abc123...`                    |
 
 ### Authentication Alternatives
 
@@ -536,6 +552,7 @@ MAX_CACHE_SIZE=1000     # Maximum cache entries
 ### API Token Security
 
 1. **Never commit tokens to git**
+
    ```bash
    # Add to .gitignore
    .env
@@ -557,10 +574,11 @@ MAX_CACHE_SIZE=1000     # Maximum cache entries
 ### Network Security
 
 1. **Use HTTPS for Zammad URL**
+
    ```env
    # Good
    ZAMMAD_URL=https://zammad.company.com
-   
+
    # Avoid
    ZAMMAD_URL=http://zammad.company.com
    ```
@@ -571,10 +589,11 @@ MAX_CACHE_SIZE=1000     # Maximum cache entries
    - Use IP restrictions if possible
 
 3. **Cloud deployment security**
+
    ```bash
    # Enable HTTPS redirect
    fly deploy --env HTTPS_REDIRECT=true
-   
+
    # Cloud Run uses HTTPS by default
    # Railway provides automatic HTTPS
    ```
