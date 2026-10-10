@@ -207,11 +207,11 @@ docker compose up -d
 
 Open **http://localhost:3080**, pick **Zammad Commander**, and start chatting.
 
-| You need | Where |
-| --- | --- |
-| Full setup (OpenRouter vs Ollama, demo Zammad, hardware) | [Commander README](https://github.com/Softoft-Orga/zammad-commander) |
-| Step-by-step from the MCP side | [docs/ZAMMAD_COMMANDER.md](docs/ZAMMAD_COMMANDER.md) |
-| MCP env / deny lists Commander uses | [Configuration guide](https://openticketai.com/en/docs/zammad-mcp-server/configuration/) |
+| You need                                                 | Where                                                                                    |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Full setup (OpenRouter vs Ollama, demo Zammad, hardware) | [Commander README](https://github.com/Softoft-Orga/zammad-commander)                     |
+| Step-by-step from the MCP side                           | [docs/ZAMMAD_COMMANDER.md](docs/ZAMMAD_COMMANDER.md)                                     |
+| MCP env / deny lists Commander uses                      | [Configuration guide](https://openticketai.com/en/docs/zammad-mcp-server/configuration/) |
 
 ## Development Environment
 

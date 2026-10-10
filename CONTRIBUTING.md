@@ -7,6 +7,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 ### Prerequisites
 
 - Python 3.11 or higher
+- [uv](https://docs.astral.sh/uv/)
 - Git
 - Docker (optional, for local Zammad)
 
@@ -18,20 +19,16 @@ Thank you for your interest in contributing! This document provides guidelines a
    cd zammad-mcp-server
    ```
 
-2. **Create a virtual environment:**
+2. **Install the package and dev tools:**
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv sync --extra dev
    ```
 
-3. **Install dependencies:**
-   ```bash
-   pip install -e ".[dev]"
-   ```
+   `uv` creates `.venv` and installs the `dev` extra (pytest, ruff, mypy).
 
-4. **Run tests to verify setup:**
+3. **Run tests to verify setup:**
    ```bash
-   pytest
+   uv run pytest
    ```
 
 ## Development Workflow

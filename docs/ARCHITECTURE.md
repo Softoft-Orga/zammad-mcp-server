@@ -50,18 +50,21 @@ The Zammad MCP Server is built on the [Model Context Protocol (MCP)](https://mod
 The main server implementation using [FastMCP](https://github.com/jlowin/fastmcp) framework.
 
 **Responsibilities:**
+
 - MCP protocol implementation
 - Tool, resource, and prompt registration
 - Request routing and response handling
 - Global client lifecycle management
 
 **Key Features:**
+
 - 30+ tools for comprehensive Zammad operations
 - 3 resources with URI-based access pattern
 - 3 pre-configured prompts for common scenarios
 - Lifespan management for proper initialization
 
 **Design Patterns:**
+
 - **Dependency Injection**: Shared client instance across all tools
 - **Context Managers**: Proper resource cleanup
 - **Decorator-Based Registration**: Clean tool definition
@@ -71,6 +74,7 @@ The main server implementation using [FastMCP](https://github.com/jlowin/fastmcp
 A wrapper around HTTP calls providing a clean, type-safe interface.
 
 **Responsibilities:**
+
 - API authentication (token, OAuth2, username/password)
 - HTTP request handling with retries
 - Response transformation to Pydantic models
@@ -105,6 +109,7 @@ priorities = client.get_priorities()
 Sophisticated permission system for controlling tool access.
 
 **Features:**
+
 - Four permission levels: DENIED, READ_ONLY, WRITE, ADMIN
 - Category-based permissions (tickets, users, organizations, etc.)
 - Tool-level overrides
@@ -161,6 +166,7 @@ BaseModel
 ```
 
 **Validation Features:**
+
 - Automatic type coercion
 - Required field validation
 - Extra field handling (`extra = "forbid"`)
@@ -193,11 +199,13 @@ BaseModel
 Supports three authentication methods with precedence:
 
 1. **API Token (Recommended)**
+
    ```bash
    ZAMMAD_HTTP_TOKEN=your-token
    ```
 
 2. **OAuth2 Token**
+
    ```bash
    ZAMMAD_OAUTH2_TOKEN=your-oauth-token
    ```
@@ -209,6 +217,7 @@ Supports three authentication methods with precedence:
    ```
 
 **Implementation:**
+
 ```python
 if self.http_token:
     headers["Authorization"] = f"Token token={self.http_token}"
@@ -238,13 +247,13 @@ def get_client() -> ZammadClient:
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[dict[str, Any]]:
     global _client, _access_controller
-    
+
     # Initialize
     _client = ZammadClient()
     _access_controller = AccessController.from_env()
-    
+
     yield {"client": _client, "access_controller": _access_controller}
-    
+
     # Cleanup
     if _client:
         _client.close()
@@ -288,11 +297,13 @@ ZammadClientError (base)
 ### Error Responses
 
 MCP errors include:
+
 - Error code/type
 - Human-readable message
 - Optional details object
 
 **Implementation:**
+
 ```python
 try:
     result = client.get_ticket(ticket_id)
@@ -322,12 +333,12 @@ except ZammadClientError as e:
 
 ### Architecture Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| Sync HTTP | Simpler implementation; async can be added later |
-| In-memory cache | Fast; suitable for single-instance deployments |
-| Pydantic models | Type safety + validation + serialization |
-| FastMCP | Modern, actively maintained, decorator-based |
+| Decision        | Rationale                                        |
+| --------------- | ------------------------------------------------ |
+| Sync HTTP       | Simpler implementation; async can be added later |
+| In-memory cache | Fast; suitable for single-instance deployments   |
+| Pydantic models | Type safety + validation + serialization         |
+| FastMCP         | Modern, actively maintained, decorator-based     |
 
 ### Remaining Optimization Opportunities
 
@@ -337,6 +348,7 @@ except ZammadClientError as e:
    - Cache warming on startup
 
 2. **Connection Pooling**
+
    ```python
    httpx.Client(
        limits=httpx.Limits(max_keepalive_connections=10)
@@ -386,13 +398,14 @@ except ZammadClientError as e:
 5. Add tests with mocked client
 
 **Example:**
+
 ```python
 @mcp.tool()
 def my_new_tool(param: str) -> dict[str, Any]:
     """Description of what the tool does."""
     check_access("my_new_tool", Permission.READ_ONLY)
     client = get_client()
-    
+
     result = client.some_operation(param)
     return result.model_dump()
 ```
@@ -405,6 +418,7 @@ def my_new_tool(param: str) -> dict[str, Any]:
 4. Return formatted content
 
 **Example:**
+
 ```python
 @mcp.resource("zammad://myresource/{id}")
 def get_my_resource(id: str) -> str:
@@ -421,6 +435,7 @@ def get_my_resource(id: str) -> str:
 3. Include example usage
 
 **Example:**
+
 ```python
 @mcp.prompt()
 def my_prompt(ticket_id: str) -> str:
@@ -466,20 +481,20 @@ def test_get_ticket_success(mock_client: MagicMock) -> None:
 
 ### Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `ZAMMAD_URL` | Yes | - | Zammad instance URL |
-| `ZAMMAD_HTTP_TOKEN` | No* | - | API token |
-| `ZAMMAD_OAUTH2_TOKEN` | No* | - | OAuth2 token |
-| `ZAMMAD_USERNAME` | No* | - | Basic auth username |
-| `ZAMMAD_PASSWORD` | No* | - | Basic auth password |
-| `MCP_ALLOWED_CATEGORIES` | No | `all` | Allowed tool categories |
-| `MCP_DENIED_TOOLS` | No | - | Denied tools (comma-separated) |
-| `MCP_ALLOWED_GROUPS` | No | - | Allowed groups (comma-separated) |
-| `LOG_LEVEL` | No | `INFO` | Logging level |
-| `CACHE_TTL_SECONDS` | No | `300` | Cache TTL |
+| Variable                 | Required | Default | Description                      |
+| ------------------------ | -------- | ------- | -------------------------------- |
+| `ZAMMAD_URL`             | Yes      | -       | Zammad instance URL              |
+| `ZAMMAD_HTTP_TOKEN`      | No\*     | -       | API token                        |
+| `ZAMMAD_OAUTH2_TOKEN`    | No\*     | -       | OAuth2 token                     |
+| `ZAMMAD_USERNAME`        | No\*     | -       | Basic auth username              |
+| `ZAMMAD_PASSWORD`        | No\*     | -       | Basic auth password              |
+| `MCP_ALLOWED_CATEGORIES` | No       | `all`   | Allowed tool categories          |
+| `MCP_DENIED_TOOLS`       | No       | -       | Denied tools (comma-separated)   |
+| `MCP_ALLOWED_GROUPS`     | No       | -       | Allowed groups (comma-separated) |
+| `LOG_LEVEL`              | No       | `INFO`  | Logging level                    |
+| `CACHE_TTL_SECONDS`      | No       | `300`   | Cache TTL                        |
 
-*At least one authentication method required
+\*At least one authentication method required
 
 ### Configuration Precedence
 
@@ -525,6 +540,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment guides.
 ### Microservices Pattern
 
 Consider splitting into:
+
 - Core MCP server
 - Zammad client service
 - Caching service (Redis)
@@ -533,6 +549,7 @@ Consider splitting into:
 ### Plugin Architecture
 
 Enable extensions for:
+
 - Custom authentication providers
 - Additional ticket sources
 - Workflow automation
@@ -549,4 +566,4 @@ Enable extensions for:
 
 Per-user Zammad permissions via `X-On-Behalf-Of` are **out of scope for 0.2.0** (planned for 0.3.0 / Zammad Commander).
 
-*This architecture is designed to be extensible while maintaining simplicity for the common use case.*
+_This architecture is designed to be extensible while maintaining simplicity for the common use case._

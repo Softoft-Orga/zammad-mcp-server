@@ -67,11 +67,11 @@ Then start Commander as above.
 
 ## How Commander uses this MCP server
 
-| Piece | Role |
-| --- | --- |
-| LibreChat | Chat UI + LLM (OpenRouter or Ollama) |
+| Piece                | Role                                                |
+| -------------------- | --------------------------------------------------- |
+| LibreChat            | Chat UI + LLM (OpenRouter or Ollama)                |
 | `zammad-mcp` service | This project over HTTP — holds one Zammad API token |
-| Your Zammad | Ticket system of record |
+| Your Zammad          | Ticket system of record                             |
 
 Default **internal admin** policy (env on the MCP container):
 
@@ -86,12 +86,12 @@ See [Access control](../README.md#access-control--security) and
 
 ## Commander vs Claude / Cursor
 
-| | Zammad Commander | Claude Desktop / Cursor + `uvx` |
-| --- | --- | --- |
-| Audience | Admins, support leads | Developers |
-| UI | Browser (LibreChat) | Desktop IDE |
+|               | Zammad Commander                 | Claude Desktop / Cursor + `uvx` |
+| ------------- | -------------------------------- | ------------------------------- |
+| Audience      | Admins, support leads            | Developers                      |
+| UI            | Browser (LibreChat)              | Desktop IDE                     |
 | MCP transport | Streamable HTTP (Docker sidecar) | stdio (`uvx zammad-mcp-server`) |
-| Setup | `docker compose up` | JSON MCP config |
+| Setup         | `docker compose up`              | JSON MCP config                 |
 
 Both use the **same** MCP tools and access-control env vars.
 

@@ -10,12 +10,8 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-authors = [
-    { name = "Softoft", email = "tobias.bueck@openticketai.com" },
-]
-maintainers = [
-    { name = "Softoft", email = "tobias.bueck@openticketai.com" },
-]
+authors = [{ name = "Softoft", email = "tobias.bueck@openticketai.com" }]
+maintainers = [{ name = "Softoft", email = "tobias.bueck@openticketai.com" }]
 keywords = [
     "zammad",
     "mcp",
