@@ -1,24 +1,63 @@
+# Local Zammad for MCP development. Image tag matches upstream
+# zammad-docker-compose (Zammad 7.2.2). Override with ZAMMAD_VERSION.
+
+x-zammad-service: &zammad-service
+  image: ghcr.io/zammad/zammad:${ZAMMAD_VERSION:-7.2.2-0024}
+  environment: &zammad-environment
+    MEMCACHE_SERVERS: zammad-memcached:11211
+    POSTGRESQL_DB: zammad_production
+    POSTGRESQL_HOST: zammad-postgresql
+    POSTGRESQL_USER: zammad
+    POSTGRESQL_PASS: zammad
+    POSTGRESQL_PORT: "5432"
+    POSTGRESQL_OPTIONS: "?pool=50"
+    POSTGRESQL_DB_CREATE: "false"
+    REDIS_URL: redis://zammad-redis:6379
+    ELASTICSEARCH_ENABLED: "true"
+    ELASTICSEARCH_SCHEMA: http
+    ELASTICSEARCH_HOST: zammad-elasticsearch
+    ELASTICSEARCH_PORT: "9200"
+    ELASTICSEARCH_NAMESPACE: zammad
+    ELASTICSEARCH_REINDEX: "true"
+    NGINX_PORT: "8080"
+    ZAMMAD_FQDN: localhost
+  restart: "no"
+  networks:
+    - zammad-network
 
 services:
   zammad-postgresql:
-    image: postgres:16-alpine
+    image: postgres:17.11-alpine
     container_name: zammad-postgresql
     environment:
-      POSTGRES_USER: zammad
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: zammad
-      POSTGRES_DB: zammad
+      ZAMMAD_DB: zammad_production
+      ZAMMAD_DB_USER: zammad
+      ZAMMAD_DB_PASS: zammad
     volumes:
       - zammad-postgresql-data:/var/lib/postgresql/data
+    configs:
+      - source: postgresql-initdb
+        target: /docker-entrypoint-initdb.d/10-create-zammad-role.sh
+        mode: "0555"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zammad"]
+      test:
+        - CMD-SHELL
+        - |
+          PGPASSWORD="$${ZAMMAD_DB_PASS}" \
+          psql --no-password --quiet --output /dev/null --variable ON_ERROR_STOP=1 \
+          --host 127.0.0.1 --username "$${ZAMMAD_DB_USER}" \
+          --dbname "$${ZAMMAD_DB}" --command "SELECT 1"
       interval: 10s
       timeout: 5s
+      start_period: 60s
       retries: 5
     networks:
       - zammad-network
 
   zammad-redis:
-    image: redis:7-alpine
+    image: redis:8.10.3-alpine
     container_name: zammad-redis
     volumes:
       - zammad-redis-data:/data
@@ -26,100 +65,127 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
+      start_period: 10s
+      retries: 5
+    networks:
+      - zammad-network
+
+  zammad-memcached:
+    image: memcached:1.6.45-alpine
+    container_name: zammad-memcached
+    command: memcached -m 256M
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "11211"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
       retries: 5
     networks:
       - zammad-network
 
   zammad-elasticsearch:
-    image: bitnami/elasticsearch:8.12.0
+    image: elasticsearch:9.5.5
     container_name: zammad-elasticsearch
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
     volumes:
-      - zammad-elasticsearch-data:/bitnami/elasticsearch/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - zammad-elasticsearch-data:/usr/share/elasticsearch/data
     networks:
       - zammad-network
 
   zammad-init:
-    image: ghcr.io/zammad/zammad:${ZAMMAD_VERSION:-7.1}
+    <<: *zammad-service
     container_name: zammad-init
-    environment:
-      - MEMCACHE_SERVERS=zammad-redis:6379
-      - POSTGRESQL_HOST=zammad-postgresql
-      - POSTGRESQL_USER=zammad
-      - POSTGRESQL_PASS=zammad
-      - POSTGRESQL_DB=zammad
-      - ELASTICSEARCH_HOST=zammad-elasticsearch
-      - ELASTICSEARCH_PORT=9200
-      - REDIS_URL=redis://zammad-redis:6379
-      - AUTO_MIGRATE=true
+    command: ["zammad-init"]
+    user: "0:0"
+    restart: on-failure
     depends_on:
       zammad-postgresql:
         condition: service_healthy
       zammad-redis:
         condition: service_healthy
-      zammad-elasticsearch:
+      zammad-memcached:
         condition: service_healthy
     volumes:
-      - zammad-data:/opt/zammad
-    command: ["zammad-init"]
-    networks:
-      - zammad-network
+      - zammad-storage:/opt/zammad/storage
 
   zammad-railsserver:
-    image: ghcr.io/zammad/zammad:${ZAMMAD_VERSION:-7.1}
+    <<: *zammad-service
     container_name: zammad-railsserver
-    environment:
-      - MEMCACHE_SERVERS=zammad-redis:6379
-      - POSTGRESQL_HOST=zammad-postgresql
-      - POSTGRESQL_USER=zammad
-      - POSTGRESQL_PASS=zammad
-      - POSTGRESQL_DB=zammad
-      - ELASTICSEARCH_HOST=zammad-elasticsearch
-      - ELASTICSEARCH_PORT=9200
-      - REDIS_URL=redis://zammad-redis:6379
+    command: ["zammad-railsserver"]
     depends_on:
       zammad-init:
         condition: service_completed_successfully
     volumes:
-      - zammad-data:/opt/zammad
-    ports:
-      - "3000:3000"
+      - zammad-storage:/opt/zammad/storage
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/ping"]
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3000"]
       interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
-    networks:
-      - zammad-network
+      timeout: 5s
+      start_period: 120s
+      retries: 3
+
+  zammad-websocket:
+    <<: *zammad-service
+    container_name: zammad-websocket
+    command: ["zammad-websocket"]
+    depends_on:
+      zammad-init:
+        condition: service_completed_successfully
+    volumes:
+      - zammad-storage:/opt/zammad/storage
+
+  zammad-scheduler:
+    <<: *zammad-service
+    container_name: zammad-scheduler
+    command: ["zammad-scheduler"]
+    depends_on:
+      zammad-init:
+        condition: service_completed_successfully
+    volumes:
+      - zammad-storage:/opt/zammad/storage
 
   zammad-nginx:
-    image: nginx:alpine
+    <<: *zammad-service
     container_name: zammad-nginx
+    command: ["zammad-nginx"]
     ports:
       - "8080:8080"
     depends_on:
       zammad-railsserver:
         condition: service_healthy
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - zammad-data:/opt/zammad:ro
-    networks:
-      - zammad-network
+      - zammad-storage:/opt/zammad/storage
+
+configs:
+  postgresql-initdb:
+    content: |
+      #!/bin/bash
+      set -o errexit
+      set -o pipefail
+
+      if [ "$${ZAMMAD_DB_USER}" = "$${POSTGRES_USER}" ]; then
+        echo "ZAMMAD_DB_USER must not be the PostgreSQL superuser." >&2
+        exit 1
+      fi
+
+      psql --variable ON_ERROR_STOP=1 \
+        --username "$${POSTGRES_USER}" \
+        --dbname "$${POSTGRES_DB}" \
+        --variable role="$${ZAMMAD_DB_USER}" \
+        --variable pass="$${ZAMMAD_DB_PASS}" \
+        --variable db="$${ZAMMAD_DB}" <<'EOSQL'
+      CREATE ROLE :"role" LOGIN PASSWORD :'pass';
+      CREATE DATABASE :"db" OWNER :"role";
+      EOSQL
 
 volumes:
   zammad-postgresql-data:
   zammad-redis-data:
   zammad-elasticsearch-data:
-  zammad-data:
+  zammad-storage:
 
 networks:
   zammad-network:

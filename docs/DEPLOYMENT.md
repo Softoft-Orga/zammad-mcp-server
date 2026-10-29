@@ -29,7 +29,7 @@ See **[docs/ZAMMAD_COMMANDER.md](ZAMMAD_COMMANDER.md)** for quick start and demo
 ### Prerequisites
 
 - Python 3.11 or higher
-- A running Zammad instance (local or remote; **6.0+**, tested with **7.1**)
+- A running Zammad instance (local or remote; **6.0+**, dev stack on **7.2.2**)
 - API token from Zammad (Profile → Token Access)
 
 ### Minimal Setup
@@ -50,13 +50,13 @@ zammad-mcp-server
 
 ### Using Docker Compose
 
-We provide a complete Zammad development environment. Default image: **Zammad 7.1**.
+We provide a complete Zammad development environment. Default image: **Zammad 7.2.2**.
 Override with `ZAMMAD_VERSION` in `docker/.env` (see [COMPATIBILITY.md](COMPATIBILITY.md)
 and [docker/README.md](../docker/README.md)):
 
 ```bash
 cd docker
-cp .env.example .env   # optional: set ZAMMAD_VERSION=6.5, 7.0, etc.
+cp .env.example .env   # optional: set ZAMMAD_VERSION=7.1, 7.0, 6.5, etc.
 docker-compose up -d
 
 # Wait for initialization (2-3 minutes)

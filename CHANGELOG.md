@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Dev stack defaults to Zammad **7.2.2** (`7.2.2-0024`): Memcached, scheduler, websocket, PostgreSQL 17, Redis 8, and Elasticsearch 9. Zammad 7.1 stays a supported tag.
+
 ## 0.2.0
 
 - CLI: `--transport stdio|http|sse` with `MCP_TRANSPORT`, host, port, and path.

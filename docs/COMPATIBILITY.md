@@ -8,7 +8,9 @@ the API and accepts personal access tokens can be used.
 
 | Zammad | MCP server | Notes |
 | --- | --- | --- |
-| **7.1** | **Tested** (primary) | Current default in the bundled `docker/` dev stack. PostgreSQL required on the Zammad side. Coexists with Zammad native AI. |
+| **7.2.2** | **Current** (default dev stack) | Latest stable (October 2026). Same ticket REST API as 7.1. PostgreSQL required. |
+| **7.2.x** | **Compatible** | Includes the 7.2.1 and 7.2.2 security updates. |
+| **7.1** | **Tested** | Previous primary test target. PostgreSQL required. Coexists with Zammad native AI. |
 | **7.0** | **Tested** | Same REST API surface as 7.1. PostgreSQL required. |
 | **6.5 – 6.5.x** | **Compatible** | Security fixes still published for 6.5.x. MySQL or PostgreSQL on the Zammad side. |
 | **6.0 – 6.4.x** | **Compatible** | Minimum supported major line. Prefer 6.5+ if you stay on Zammad 6. |
@@ -20,7 +22,7 @@ access — the MCP server only needs `ZAMMAD_URL` and a token.
 ## MCP server vs Zammad version
 
 The **PyPI package** (`zammad-mcp-server`) is versioned independently (currently
-`0.1.x`). One MCP server release works across all supported Zammad versions above;
+`0.2.x`). One MCP server release works across all supported Zammad versions above;
 you do not need a different MCP build per Zammad minor release.
 
 | Artifact | Versioning |
@@ -36,7 +38,7 @@ The local Docker Compose stack reads `ZAMMAD_VERSION` from `docker/.env`:
 ```bash
 cd docker
 cp .env.example .env
-# edit ZAMMAD_VERSION if needed (default: 7.1)
+# edit ZAMMAD_VERSION if needed (default: 7.2.2-0024)
 docker compose up -d
 ```
 
@@ -44,7 +46,9 @@ Supported image tags for local development:
 
 | `ZAMMAD_VERSION` | Use when |
 | --- | --- |
-| `7.1` | Default — matches current Zammad release (recommended) |
+| `7.2.2-0024` | Default — Zammad 7.2.2, current stable (recommended) |
+| `7.2` | Floating tag for later 7.2 patch releases |
+| `7.1` | Previous stable line |
 | `7.0` | Reproduce a 7.0 instance before upgrading |
 | `6.5` | Test against the last 6.x line |
 | `6.3` | Legacy 6.x smoke tests |

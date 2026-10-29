@@ -64,20 +64,22 @@ Connecting a large language model to a real helpdesk usually means writing a bes
 The MCP server talks to Zammad through the **REST API**. No Zammad-side plugin is
 required. Full matrix: **[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)**.
 
-| Zammad version  | Status                                  |
-| --------------- | --------------------------------------- |
-| **7.1**         | **Tested** (primary; default dev stack) |
-| **7.0**         | **Tested**                              |
-| **6.5.x**       | **Compatible**                          |
-| **6.0 – 6.4.x** | **Compatible** (minimum supported line) |
-| **&lt; 6.0**    | Not supported                           |
+| Zammad version  | Status                                      |
+| --------------- | ------------------------------------------- |
+| **7.2.2**       | **Current** (default dev stack)             |
+| **7.2.x**       | **Compatible**                              |
+| **7.1**         | **Tested**                                  |
+| **7.0**         | **Tested**                                  |
+| **6.5.x**       | **Compatible**                              |
+| **6.0 – 6.4.x** | **Compatible** (minimum supported line)     |
+| **&lt; 6.0**    | Not supported                               |
 
 **MCP package vs Zammad:** `zammad-mcp-server` on PyPI is versioned independently
-(`0.1.x`). One MCP release works with every supported Zammad version — set
+(`0.2.x`). One MCP release works with every supported Zammad version — set
 `ZAMMAD_URL` to your instance; no per-Zammad MCP build.
 
-**Local dev stack:** `docker/` ships Zammad **7.1** by default. Override with
-`ZAMMAD_VERSION` in `docker/.env` (`7.0`, `6.5`, `6.3` also supported). See
+**Local dev stack:** `docker/` ships Zammad **7.2.2** by default. Override with
+`ZAMMAD_VERSION` in `docker/.env` (`7.2`, `7.1`, `7.0`, `6.5`, `6.3` also supported). See
 [docker/README.md](docker/README.md).
 
 Zammad **7.x** requires **PostgreSQL** on the Zammad side (MySQL is not supported
@@ -105,7 +107,7 @@ Full guides, security checklists, and deployment notes live on the Open Ticket A
 
 ### How this fits the Zammad + AI landscape
 
-- **[Zammad 7.1 native AI](https://openticketai.com/en/docs/blog/zammad-ai-zammad-7-ki-funktionen-leitfaden/)** — built-in summaries and writing assistant inside the Zammad UI.
+- **[Zammad 7 native AI](https://openticketai.com/en/docs/blog/zammad-ai-zammad-7-ki-funktionen-leitfaden/)** — built-in summaries and writing assistant inside the Zammad UI.
 - **Zammad MCP Server (this project)** — connects **external** MCP clients (Claude Desktop, Cursor, custom agents) to Zammad.
 - **[Zammad Commander](https://github.com/Softoft-Orga/zammad-commander)** — **browser chat UI** (LibreChat + this MCP server + your Zammad). No Cursor required; `docker compose up` for internal admin chat. See [Zammad Commander (browser chat UI)](#zammad-commander-browser-chat-ui).
 - **[Open Ticket AI Runtime](https://openticketai.com/en/docs/otai-runtime/)** — on-prem inference with **custom-trained** models via the OTAI Zammad connector ([integration guide](https://openticketai.com/en/docs/blog/integrating-zammad-open-ticket-ai/)).
@@ -216,7 +218,7 @@ Open **http://localhost:3080**, pick **Zammad Commander**, and start chatting.
 ## Development Environment
 
 We provide a complete Docker Compose setup for local development. Default: Zammad
-**7.1**; set `ZAMMAD_VERSION` in `docker/.env` for other supported tags — see
+**7.2.2**; set `ZAMMAD_VERSION` in `docker/.env` for other supported tags — see
 [docker/README.md](docker/README.md).
 
 ```bash
@@ -478,7 +480,7 @@ Install the package and add it to your MCP client config with `ZAMMAD_URL` and `
 
 ### Which Zammad versions are supported?
 
-Zammad **7.1** (primary, tested), **7.0** (tested), and **6.0–6.5.x** (compatible). It talks to Zammad over the REST API, so **no Zammad-side plugin is required**. See the [compatibility matrix](docs/COMPATIBILITY.md).
+Zammad **7.2.2** (current dev stack), **7.1** and **7.0** (tested), and **6.0–6.5.x** (compatible). It talks to Zammad over the REST API, so **no Zammad-side plugin is required**. See the [compatibility matrix](docs/COMPATIBILITY.md).
 
 ### Is it safe to use on a production Zammad instance?
 
@@ -490,7 +492,7 @@ Yes — it is MIT-licensed and free to self-host. There is no SaaS dependency; y
 
 ### How is this different from Zammad's built-in AI?
 
-Zammad 7.1's native AI adds summaries and a writing assistant inside the Zammad UI. The Zammad MCP Server instead connects **external** AI agents to Zammad. See [how it fits the Zammad + AI landscape](#how-this-fits-the-zammad--ai-landscape).
+Zammad 7's native AI adds summaries and a writing assistant inside the Zammad UI. The Zammad MCP Server instead connects **external** AI agents to Zammad. See [how it fits the Zammad + AI landscape](#how-this-fits-the-zammad--ai-landscape).
 
 ### Can I run it with Docker?
 

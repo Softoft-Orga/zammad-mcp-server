@@ -18,11 +18,13 @@ Create an API token under **Profile → Token Access**, then point your MCP clie
 
 ## Choose a Zammad version
 
-Set `ZAMMAD_VERSION` in `.env`:
+Set `ZAMMAD_VERSION` in `.env` (see `.env.example`):
 
 | Tag | Purpose |
 | --- | --- |
-| `7.1` | **Default** — current release, primary test target |
+| `7.2.2-0024` | **Default** — Zammad 7.2.2, current stable |
+| `7.2` | Floating 7.2 patch updates |
+| `7.1` | Previous stable line |
 | `7.0` | Match a 7.0 instance |
 | `6.5` | Last supported 6.x line |
 | `6.3` | Legacy 6.x checks |
@@ -30,13 +32,17 @@ Set `ZAMMAD_VERSION` in `.env`:
 Example:
 
 ```env
-ZAMMAD_VERSION=6.5
+ZAMMAD_VERSION=7.1
 ```
 
-The MCP server package itself is the same for all tags — only the local Zammad
-container changes.
+The stack follows the current Zammad Docker layout: PostgreSQL 17, Redis 8,
+Memcached, Elasticsearch 9, plus the railsserver, websocket, scheduler, and
+nginx containers from the Zammad image. The MCP server package itself is the
+same for all tags — only the local Zammad containers change.
 
-**Switching major versions:** stop the stack and remove volumes if migrations fail:
+**Switching versions:** stop the stack and remove volumes. A 7.1 data directory
+cannot be reused: the database role layout and the Elasticsearch major version
+changed.
 
 ```bash
 docker compose down -v
