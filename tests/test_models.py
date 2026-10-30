@@ -134,6 +134,16 @@ class TestUserModel:
 class TestArticleModel:
     """Test suite for Article model."""
 
+    def test_article_from_zammad_api_payload(self) -> None:
+        """Zammad's REST API returns snake_case keys (ticket_id, not ticketId)."""
+        article = Article.model_validate({"id": 1, "ticket_id": 100, "body": "Hello"})
+        assert article.ticket_id == 100
+
+    def test_article_accepts_legacy_camel_case(self) -> None:
+        """The camelCase alias keeps working for existing callers."""
+        article = Article.model_validate({"id": 1, "ticketId": 100})
+        assert article.ticket_id == 100
+
     def test_article_creation(self) -> None:
         """Test basic article creation."""
         article = Article(

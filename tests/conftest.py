@@ -270,8 +270,8 @@ def zammad_api_mock(respx_mock: respx.MockRouter) -> respx.MockRouter:
     base_url = "http://test-zammad.local/api/v1"
 
     # Health check
-    respx_mock.get(f"{base_url}/ping").mock(
-        return_value=Response(200, json={"version": "6.0.0", " pong": "pong"})
+    respx_mock.get(f"{base_url}/users/me").mock(
+        return_value=Response(200, json={"id": 1, "login": "agent@test.com"})
     )
 
     # Server info
